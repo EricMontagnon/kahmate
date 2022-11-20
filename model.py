@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+import random
 
 
 class Color(enum.Enum):
@@ -15,24 +16,27 @@ class Color(enum.Enum):
     YELLOW = "yellow"
 
 
-@dataclasses.dataclass(frozen=True)
-class StrengthCard:
-    """
-    A strength card is defined by its power.
-    """
-    power: int
-
-
 class Piece:
     """
     A piece is defined by :
+    - its ID
     - its strength
     - its number of cases during a movement
+    - its position
+    - if it has the ball or not
     """
-    def __init__(self, strength, speed):
+    def __init__(self, strength, speed, position, ball):
         self._strength = strength
         self._speed = speed
+        self._position = position
+        self._ball = ball
 
+    def position(self):
+        return self._position
+
+    def set_position(self, position, ball):
+        self._position = position
+        self._ball = ball
 
 class Player:
     """
@@ -51,13 +55,18 @@ class Player:
     def pieces(self):
         return self._pieces
 
-    @property
-    def color(self):
-        return self._color
+    def get_positions(self):
+        positions = []
+        for p in self._pieces:
+            positions.append(p.position())
+        return positions
 
-    @property
-    def strength_deck(self):
-        return self._strength_deck
+    def update_positions(self, pieceID, new_position, ball):
+        self._pieces[pieceID].set_position(new_position, ball)
+
+    def pick_strength(self):
+        random.shuffle(self._strength_deck)
+        return self._strength_deck.pop()
 
     # setters?
 
@@ -67,7 +76,7 @@ class HumanPlayer(Player):
     A human player is simply a player with a name, as a string.
     """
 
-    def __init__(self, name, pieces, color):
+    def __init__(self, name,  pieces, color):
         super().__init__(pieces, color)
         self._name = name
 
@@ -104,16 +113,6 @@ class AIPlayer(Player):
 
     def __str__(self):
         return f"{self._level.value} (AI)"
-
-
-class Board:
-    """
-    The board is simply defined by ??
-    """
-
-    def __init__(self):
-        pass
-
 
 class Move:
     """

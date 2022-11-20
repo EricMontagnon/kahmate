@@ -26,29 +26,36 @@ class Game:
       level.
     """
 
-    def __init__(self, players):
-        self._board = model.Board()
+    def __init__(self, players, pieces, colors):
         self._players = []
+        k = -1
         for player in players:
+            k += 1
             if isinstance(player, str):
-                self._players.append(model.HumanPlayer(player))
+                self._players.append(model.HumanPlayer(player, pieces[k], colors[k]))
             elif isinstance(player, model.Level):
-                self._players.append(model.AIPlayer(player))
+                self._players.append(model.AIPlayer(player, pieces[k], colors[k]))
             else:
                 assert False, "unknown player definition"
-        self._next_player = 0
+        self._currentPlayer = 0
 
-    def next_player(self):
-        return self._players[self._next_player]
+    def currentPlayer(self):
+        return self._currentPlayer
+
+    def get_positions(self):
+        return[self._players[0].get_positions(), self._players[1].get_positions()]
+
+    def update_positions(self, playerID, pieceID, new_position, ball):
+        self._players[playerID].update_positions(pieceID, new_position, ball)
+
+
+
 
     def generate_valid_moves(self):
         moves = []
         pass
 
     def winners(self):
-        pass
-
-    def __str__(self):
         pass
 
 
