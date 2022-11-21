@@ -2,7 +2,7 @@ import dataclasses
 import enum
 import random
 
-
+BLACK = "black"
 class Color(enum.Enum):
     """
     The various possible colors of a team.
