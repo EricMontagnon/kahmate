@@ -1,13 +1,26 @@
 import model
 import kahmate
 
+def test_initialisation_piece():
+    piece1 = model.Piece(1, 1, [100, 100], False, False)
+    assert piece1.position() == [100, 100]
 
-def essai_initialisation_jeu():
-    piece1 = model.Piece(1, 1, [100, 100], False)
-    piece2 = model.Piece(1, 1, [500, 500], False)
+def test_initialisation_player():
+    piece1 = model.Piece(1, 1, [100, 100], False, False)
+    player1 = model.HumanPlayer("Jacques", [piece1], "blue")
+    assert piece1.position() == [100, 100]
+
+def test_initialisation_jeu():
+    piece1 = model.Piece(1, 1, [100, 100], False, False)
+    piece2 = model.Piece(1, 1, [500, 500], False, False)
     game = kahmate.Game(["Jean", "Jacques"], [[piece1], [piece2]], ["blue", "blue"])
     positions = game.get_positions()
-    print("essai_initialisation_jeu")
-    print("positions == [[[100, 100]], [[500, 500]]] :", positions == [[[100, 100]], [[500, 500]]])
+    assert positions == [[[100, 100]], [[500, 500]]]
 
-essai_initialisation_jeu()
+def test_movement_initialisation():
+    pass
+
+def test_basic_movement():
+    pass
+
+

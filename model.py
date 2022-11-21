@@ -25,11 +25,12 @@ class Piece:
     - its position
     - if it has the ball or not
     """
-    def __init__(self, strength, speed, position, ball):
+    def __init__(self, strength, speed, position, ball, is_down):
         self._strength = strength
         self._speed = speed
         self._position = position
         self._ball = ball
+        self._is_down = is_down
 
     def position(self):
         return self._position
@@ -37,6 +38,7 @@ class Piece:
     def set_position(self, position, ball):
         self._position = position
         self._ball = ball
+
 
 class Player:
     """
@@ -114,6 +116,7 @@ class AIPlayer(Player):
     def __str__(self):
         return f"{self._level.value} (AI)"
 
+
 class Move:
     """
     The parent class of all possible moves.
@@ -149,7 +152,7 @@ class Pass(Move):
         return "pass"
 
 
-class ForceWayThrough(Move):
+class Tackle(Move):
     """
     The move of Forcing a piece's way through, defined by the two pieces
     """
@@ -158,7 +161,19 @@ class ForceWayThrough(Move):
         super().__init__()
 
     def __str__(self):
-        return "ForceWayThrough"
+        return "Tackle"
+
+
+class FootKick(Move):
+    """
+        The move of Forcing a piece's way through, defined by the two pieces
+        """
+
+    def __init__(self):
+        super().__init__()
+
+    def __str__(self):
+        return "FootKick"
 
 
 class Try(Move):
