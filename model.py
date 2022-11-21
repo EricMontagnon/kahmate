@@ -25,7 +25,7 @@ class Piece:
     - its position
     - if it has the ball or not
     """
-    def __init__(self, piece_type: PieceType, position, ball, is_down):
+    def __init__(self, piece_type: PieceType, position: [int, int], ball: bool, is_down: bool):
         self._piece_type = piece_type
         self._position = position
         self._ball = ball
