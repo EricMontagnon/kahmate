@@ -2,18 +2,18 @@ import dataclasses
 import enum
 import random
 
-BLACK = "black"
-class Color(enum.Enum):
+
+class PieceType(enum.Enum):
     """
-    The various possible colors of a team.
+    The various possible types of a piece.
+    [speed, attack_strength, defense_strength]
     """
 
-    BLACK = "black"
-    BLUE = "blue"
-    GREEN = "green"
-    RED = "red"
-    WHITE = "white"
-    YELLOW = "yellow"
+    REGULAR = [3, 0, 0]
+    BIG = [2, 2, 1]
+    TOUGH = [3, 1, 0]
+    FAST = [4, -1, 1]
+    SMART = [3, 0, 1]
 
 
 class Piece:
@@ -25,14 +25,13 @@ class Piece:
     - its position
     - if it has the ball or not
     """
-    def __init__(self, strength, speed, position, ball, is_down):
-        self._strength = strength
-        self._speed = speed
+    def __init__(self, piece_type: PieceType, position, ball, is_down):
+        self._piece_type = piece_type
         self._position = position
         self._ball = ball
         self._is_down = is_down
 
-    def position(self):
+    def get_position(self):
         return self._position
 
     def set_position(self, position, ball):
@@ -60,7 +59,7 @@ class Player:
     def get_positions(self):
         positions = []
         for p in self._pieces:
-            positions.append(p.position())
+            positions.append(p.get_position())
         return positions
 
     def update_positions(self, pieceID, new_position, ball):

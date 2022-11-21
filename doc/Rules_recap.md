@@ -6,10 +6,10 @@ Each Player starts with :
 
 - 6 pieces with each 3 caracteristics [speed, attack_strength, defense_strength] :   
 2 x regular player [3, 0, 0]  
-1 x big strong guy [2, 2, 1]  
-1 x strong guy [3, 1, 0]  
+1 x big guy [2, 2, 1]  
+1 x tough guy [3, 1, 0]  
 1 x fast guy [4, -1, -1]  
-1 x clever guy [3, 0, 1]  
+1 x smart guy [3, 0, 1]  
 
 - 6 strength cards : [1, 2, 3, 4, 5, 6]
 
