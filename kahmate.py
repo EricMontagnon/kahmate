@@ -28,6 +28,14 @@ class Game:
                 assert False, "unknown player definition"
         self._currentPlayer = 0
 
+    def __str__(self):
+        ans = "Description of the first team :"
+        ans += "\n" + str(self._players[0])
+        ans += "\n" + " "
+        ans += "\n" + "Description of the second team :"
+        ans += "\n" + str(self._players[1])
+        return ans
+
     def currentPlayer(self):
         return self._currentPlayer
 
@@ -37,9 +45,6 @@ class Game:
     def update_positions(self, playerID, pieceID, new_position, ball):
         self._players[playerID].update_positions(pieceID, new_position, ball)
 
-
-
-
     def generate_valid_moves(self):
         moves = []
         pass
@@ -47,7 +52,7 @@ class Game:
     def winners(self):
         pass
 
-
-if __name__ == "__main__":
-    game = Game(["xclerc", model.Level.HARD])
-    print(game)
+piece1 = model.Piece(model.PieceType.BIG, [100, 100], False, False)
+piece2 = model.Piece(model.PieceType.BIG, [500, 500], False, False)
+game = Game(["Jean", "Jacques"], [[piece1], [piece2]], ["blue", "blue"])
+print(game)
