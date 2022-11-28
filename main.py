@@ -1,80 +1,55 @@
-import pygame
-
-# initialize pygame
-pygame.init()
-
-# create the screen
-x_axis = 800
-y_axis = 600
-screen = pygame.display.set_mode((x_axis, y_axis))
-
-# edit title and icon
-pygame.display.set_caption("KAHMATE")
-icon = pygame.image.load("img/ball.png")
-pygame.display.set_icon(icon)
-
-# player1
-player1_img = pygame.image.load("img/player.png")
-player1_x = 100
-player1_y = 100
-player1_turn = True
+from kahmate import model
+from kahmate.settings import *
 
 
-# player2
-player2_img = pygame.image.load("img/player2.png")
-player2_x = 500
-player2_y = 500
-player2_turn = False
+class Game:
+    def __init__(self, players):
+        # init pygame
+        pg.init()
+        self._running = True
+        self._clock = pg.time.Clock()
+
+        # screen settings
+        self._board = model.Board()
+        self._screen = pg.display.set_mode((WIDTH, HEIGHT))
+        icon = pg.image.load('img/ball.png')
+        pg.display.set_icon(icon)
+        pg.display.set_caption(TITLE)
+
+        # define players
+        self._players = []
+        for player, color in players:
+            if isinstance(player, str):
+                self._players.append(model.HumanPlayer(player, color))
+            elif isinstance(player, model.Level):
+                self._players.append(model.AIPlayer(player, color))
+            else:
+                assert False, "unknown player definition"
+        self._next_player = 0
+
+    def next_player(self):
+        return self._players[self._next_player]
+
+    def update(self):
+        self._board.draw(self._screen, self._players)
+        pg.display.update()
+
+    def run(self):
+        while self._running:
+            for event in pg.event.get():
+                self._clock.tick(FPS)
+                if event.type == pg.QUIT:
+                    self._running = False
+
+            self.update()
 
 
-def player(player_img, x, y):
-    screen.blit(player_img, (x, y))
+if __name__ == "__main__":
+    first_player = input('Name of the first player:')
+    second_player = input('Name of the second player:')
+
+    game = Game([(first_player, model.PlayerColor.BLUE), (second_player, model.PlayerColor.PINK)])
+    game.run()
 
 
-# game loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
 
-        if event.type == pygame.KEYDOWN:
-            if player1_turn:
-                if event.key == pygame.K_LEFT:
-                    player1_x -= 15
-                if event.key == pygame.K_RIGHT:
-                    player1_x += 15
-                if event.key == pygame.K_DOWN:
-                    player1_y += 15
-                if event.key == pygame.K_UP:
-                    player1_y -= 15
-                player1_turn = False
-                player2_turn = True
-            elif player2_turn:
-                if event.key == pygame.K_LEFT:
-                    player2_x -= 15
-                if event.key == pygame.K_RIGHT:
-                    player2_x += 15
-                if event.key == pygame.K_DOWN:
-                    player2_y += 15
-                if event.key == pygame.K_UP:
-                    player2_y -= 15
-                player2_turn = False
-                player1_turn = True
-
-    # maintain player in the screen
-    if player1_x <= 0:
-        player1_x = 0
-    elif player1_x >= x_axis - 64:
-        player1_x = x_axis - 64
-
-    if player1_y <= 0:
-        player1_y = 0
-    elif player1_y >= y_axis - 64:
-        player1_y = y_axis - 64
-
-    screen.fill((30, 113, 36))
-    player(player1_img, player1_x, player1_y)
-    player(player2_img, player2_x, player2_y)
-
-    pygame.display.update()
