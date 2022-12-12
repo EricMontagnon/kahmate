@@ -1,7 +1,8 @@
+from typing import Optional
 from typing import TYPE_CHECKING
-
 from kahmate import model
 from kahmate.settings import *
+import pygame as pg
 
 if TYPE_CHECKING:
     from kahmate.model import Piece
@@ -56,7 +57,7 @@ class Game:
                 distance_ok = 0 < abs(i - piece.position[0]) + abs(j - piece.position[1]) <= piece.speed
                 empty_case = self._board.matrix[i][j] is None
                 if distance_ok and empty_case:
-                    moves.append(Displacement(piece, [i, j]))
+                    moves.append(Displacement(piece, [i, j], None))
         return moves
 
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
@@ -69,8 +70,8 @@ class Game:
         if defense_score > attack_score:
             return "Defense wins!"
         else:
-            attack_pick = attack_player.pick_strength() - attack_piece
-            defense_pick = defense_player.pick_strength()
+            attack_pick = attack_player.pick_strength() + attack_piece.attack
+            defense_pick = defense_player.pick_strength() + defense_piece.defense
             if attack_pick > defense_pick:
                 return "Attack wins!"
             else:
@@ -82,12 +83,21 @@ class Game:
     def update_board(self):
         self._board.update_board(self.players)
 
+    def get_row_col_from_mouse(self, pos):
+        x, y = pos
+        row = y // GRIDWIDTH
+        col = x // GRIDWIDTH
+        return row, col
+
     def run(self):
         while self._running:
             for event in pg.event.get():
                 self._clock.tick(FPS)
                 if event.type == pg.QUIT:
                     self._running = False
+
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    pos = pg.mouse.get_pos()
 
             self.update()
 
@@ -105,8 +115,7 @@ class Displacement(Move):
     """
     The move of drawing cards from the train card deck.
     """
-
-    def __init__(self, piece: model.Piece, new_position: [int, int], face_off_opponent=None):
+    def __init__(self, piece: model.Piece, new_position: [int, int], face_off_opponent: Optional[model.Piece]):
         super().__init__()
         self._piece = piece
         self._new_position = new_position
@@ -116,7 +125,7 @@ class Displacement(Move):
         return "Displacement of the piece " + str(self._piece.name) + " to the position : " + str(self._new_position)
 
     def play(self, game: Game):
-        if self._face_off_opponent.position == [-1, -1]:
+        if self._face_off_opponent is None:
             self._piece.position = self._new_position
             if self._piece.has_ball:
                 game.update_ball_position(self._new_position)
