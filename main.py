@@ -1,10 +1,10 @@
+from typing import TYPE_CHECKING
+
 from kahmate import model
 from kahmate.settings import *
-from typing import Tuple
 
-
-PIECE0 = model.Piece(model.PieceType.BIG)
-PIECE0.position = [-1, -1]
+if TYPE_CHECKING:
+    from kahmate.model import Piece
 
 
 class Game:
@@ -48,25 +48,25 @@ class Game:
         ans += "\n" + str(self.players[1])
         return ans
 
-    def generate_displacement(self, piece: model.Piece):
+    def generate_displacement(self, piece: 'Piece'):
         # LOOPS TO BE OPTIMIZED
         moves = []
         for i in range(ROWS):
             for j in range(COLS):
-                distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
+                distance_ok = 0 < abs(i - piece.position[0]) + abs(j - piece.position[1]) <= piece.speed
                 empty_case = self._board.matrix[i][j] is None
                 if distance_ok and empty_case:
                     moves.append(Displacement(piece, [i, j]))
         return moves
 
-    def face_off(self, attack_piece: model.Piece, defense_piece : model.Piece):
+    def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
         attack_player = self.players[self._next_player]
         defense_player = self.players[(self._next_player + 1) % 2]
         attack_score = attack_player.pick_strength() + attack_piece.attack
         defense_score = defense_player.pick_strength() + defense_piece.defense
-        if attack_score > defense_score :
+        if attack_score > defense_score:
             return "Attack wins!"
-        if defense_score > attack_score :
+        if defense_score > attack_score:
             return "Defense wins!"
         else:
             attack_pick = attack_player.pick_strength()
@@ -105,7 +105,8 @@ class Displacement(Move):
     """
     The move of drawing cards from the train card deck.
     """
-    def __init__(self, piece: model.Piece, new_position: [int, int], face_off_opponent=PIECE0):
+
+    def __init__(self, piece: model.Piece, new_position: [int, int], face_off_opponent=None):
         super().__init__()
         self._piece = piece
         self._new_position = new_position
@@ -197,6 +198,3 @@ if __name__ == "__main__":
         print(d)
 
     game.run()
-
-
-
