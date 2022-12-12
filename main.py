@@ -69,7 +69,7 @@ class Game:
         if defense_score > attack_score:
             return "Defense wins!"
         else:
-            attack_pick = attack_player.pick_strength()
+            attack_pick = attack_player.pick_strength() - attack_piece
             defense_pick = defense_player.pick_strength()
             if attack_pick > defense_pick:
                 return "Attack wins!"
