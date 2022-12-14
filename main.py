@@ -1,19 +1,25 @@
-from typing import Optional
-from kahmate import model
 from kahmate.settings import *
+from kahmate import model
 import pygame as pg
+
+
+def get_row_col_from_mouse(pos):
+    x, y = pos
+    row = y // GRIDWIDTH
+    col = x // GRIDWIDTH
+    return row, col
 
 
 class Game:
     def __init__(self, players):
         # init pygame
         pg.init()
-        self._running = True
-        self._clock = pg.time.Clock()
+        self.running = True
+        self.clock = pg.time.Clock()
 
         # screen settings
-        self._board = model.Board()
-        self._screen = pg.display.set_mode((WIDTH, HEIGHT))
+        self.board = model.Board()
+        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         icon = pg.image.load('img/ball.png')
         pg.display.set_icon(icon)
         pg.display.set_caption(TITLE)
@@ -28,13 +34,15 @@ class Game:
             else:
                 assert False, "unknown player definition"
         self._next_player = 0
-        self._ball_position = [0, 0]
+        self.ball_position = [0, 0]
+        self.valid_moves = []
+        self.board.update_board(self.players)
 
     def next_player(self):
         return self.players[self._next_player]
 
     def update(self):
-        self._board.draw(self._screen, self.players)
+        self.board.draw(self.screen, self.players)
         pg.display.update()
 
     def __str__(self):
@@ -45,16 +53,16 @@ class Game:
         ans += "\n" + str(self.players[1])
         return ans
 
-    def generate_displacement(self, piece: model.Piece):
+    def generate_displacement(self, x, y):
         # LOOPS TO BE OPTIMIZED
-        moves = []
-        for i in range(ROWS):
-            for j in range(COLS):
-                distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
-                empty_case = self._board.matrix[i][j] is None
-                if distance_ok and empty_case:
-                    moves.append(Displacement(piece, [i, j], None))
-        return moves
+        piece = self.board.matrix[x][y]
+        if piece in self.next_player().pieces:
+            for i in range(ROWS):
+                for j in range(COLS):
+                    distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
+                    empty_case = self.board.matrix[i][j] is None
+                    if distance_ok and empty_case:
+                        self.valid_moves.append(model.Displacement(piece, [i, j], None))
 
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
         attack_player = self.players[self._next_player]
@@ -73,119 +81,45 @@ class Game:
             else:
                 return "Defense wins!"
 
-    def update_ball_position(self, new_position: [int, int]):
-        self._ball_position = new_position
-
-    def update_board(self):
-        self._board.update_board(self.players)
-
-    def get_row_col_from_mouse(self, pos):
-        x, y = pos
-        row = y // GRIDWIDTH
-        col = x // GRIDWIDTH
-        return row, col
+    def play(self, move: model.Displacement):
+        if move.face_off_opponent is None:
+            move.piece.position = move.new_position
+            if move.piece.has_ball:
+                self.ball_position = move.new_position
+        else:
+            result_face_off = game.face_off(move.piece, move.face_off_opponent)
+            if result_face_off == "Denfense wins!":
+                position = move.piece.position()
+                if move.piece.has_ball:
+                    self.ball_position = [position[0], position[1] - 1]
+                move.piece.is_down = True
+            else:
+                move.piece.position = move.new_position,
+                if move.piece.has_ball:
+                    self.ball_position = move.new_position
+                move.face_off_opponent.is_down = True
+        self.board.update_board(self.players)
 
     def run(self):
-        while self._running:
+        while self.running:
             for event in pg.event.get():
-                self._clock.tick(FPS)
+                self.clock.tick(FPS)
                 if event.type == pg.QUIT:
-                    self._running = False
+                    self.running = False
 
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    pos = pg.mouse.get_pos()
+                    mouse_pos = pg.mouse.get_pos()
+                    x, y = get_row_col_from_mouse(mouse_pos)
+                    if self.valid_moves:
+                        for move in self.valid_moves:
+                            if [x, y] == move.new_position:
+                                self.play(move)
+                                self.valid_moves = []
+                                self._next_player = (self._next_player + 1) % 2
+                    else:
+                        self.generate_displacement(x, y)
 
             self.update()
-
-
-class Move:
-    """
-    The parent class of all possible moves.
-    """
-
-    def __init__(self):
-        pass
-
-
-class Displacement(Move):
-    """
-    The move of drawing cards from the train card deck.
-    """
-    def __init__(self, piece: model.Piece, new_position: [int, int], face_off_opponent: Optional[model.Piece]):
-        super().__init__()
-        self._piece = piece
-        self._new_position = new_position
-        self._face_off_opponent = face_off_opponent
-
-    def __str__(self):
-        return "Displacement of the piece " + str(self._piece.name) + " to the position : " + str(self._new_position)
-
-    def play(self, game: Game):
-        if self._face_off_opponent is None:
-            self._piece.position = self._new_position
-            if self._piece.has_ball:
-                game.update_ball_position(self._new_position)
-        else:
-            result_face_off = game.face_off(self._piece, self._face_off_opponent)
-            if result_face_off == "Denfense wins!":
-                position = self._piece.position()
-                if self._piece.has_ball:
-                    game.update_ball_position([position[0], position[1] - 1])
-                self._piece.is_down = True
-            else:
-                self._piece.position = self._new_position,
-                if self._piece.has_ball:
-                    game.update_ball_position(self._new_position)
-                self._face_off_opponent.is_down = True
-            game.update_board()
-
-
-class Pass(Move):
-    """
-    The move of passing the ball to another piece.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def __str__(self):
-        return "pass"
-
-
-class Tackle(Move):
-    """
-    The move of Forcing a piece's way through, defined by the two pieces
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def __str__(self):
-        return "Tackle"
-
-
-class FootKick(Move):
-    """
-        The move of Forcing a piece's way through, defined by the two pieces
-        """
-
-    def __init__(self):
-        super().__init__()
-
-    def __str__(self):
-        return "FootKick"
-
-
-class Try(Move):
-    """
-    The move of Trying,
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def __str__(self):
-        return "Try"
 
 
 if __name__ == "__main__":
@@ -193,14 +127,14 @@ if __name__ == "__main__":
     second_player = input('Name of the second player:')
 
     game = Game([(first_player, model.PlayerColor.BLUE), (second_player, model.PlayerColor.PINK)])
-    game.update_board()
-    possible_displacements = game.generate_displacement(game.players[1].pieces[0])
-    displacement = possible_displacements[2]
-    displacement.play(game)
-
-    print("LIST OF DISPLACEMENTS")
-    for d in possible_displacements:
-        print(d)
+    # game.update_board()
+    # possible_displacements = game.generate_displacement(game.players[1].pieces[0])
+    # displacement = possible_displacements[2]
+    # displacement.play(game)
+    #
+    # print("LIST OF DISPLACEMENTS")
+    # for d in possible_displacements:
+    #     print(d)
 
     game.run()
 
