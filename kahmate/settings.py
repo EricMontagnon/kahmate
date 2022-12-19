@@ -8,7 +8,8 @@ DARK_GREEN = (52, 148, 31)
 
 # window settings
 GRIDWIDTH = 72
-IMGSIZE = 64
+PIECESIZE = 64
+CARDSIZE = (100, 140)
 ROWS = 8
 COLS = 11
 WIDTH = COLS*GRIDWIDTH
@@ -21,24 +22,45 @@ BALL = pg.transform.scale(pg.image.load('img/ball.png'), (32, 32))
 LIGHTNING = pg.transform.scale(pg.image.load('img/lightning.png'), (32, 32))
 
 PINK_IMG = {
-    'BIG': pg.transform.scale(pg.image.load('img/big_pink.png'), (IMGSIZE, IMGSIZE)),
-    'FAST': pg.transform.scale(pg.image.load('img/fast_pink.png'), (IMGSIZE, IMGSIZE)),
-    'REGULAR': pg.transform.scale(pg.image.load('img/regular_pink.png'), (IMGSIZE, IMGSIZE)),
-    'SMART': pg.transform.scale(pg.image.load('img/smart_pink.png'), (IMGSIZE, IMGSIZE)),
-    'TOUGH': pg.transform.scale(pg.image.load('img/tough_pink.png'), (IMGSIZE, IMGSIZE)),
-    'RIP': pg.transform.scale(pg.image.load('img/rip_pink.png'), (IMGSIZE, IMGSIZE))
+    'BIG': pg.transform.scale(pg.image.load('img/big_pink.png'), (PIECESIZE, PIECESIZE)),
+    'FAST': pg.transform.scale(pg.image.load('img/fast_pink.png'), (PIECESIZE, PIECESIZE)),
+    'REGULAR': pg.transform.scale(pg.image.load('img/regular_pink.png'), (PIECESIZE, PIECESIZE)),
+    'SMART': pg.transform.scale(pg.image.load('img/smart_pink.png'), (PIECESIZE, PIECESIZE)),
+    'TOUGH': pg.transform.scale(pg.image.load('img/tough_pink.png'), (PIECESIZE, PIECESIZE)),
+    'RIP': pg.transform.scale(pg.image.load('img/rip_pink.png'), (PIECESIZE, PIECESIZE))
 }
 
 BLUE_IMG = {
-    'BIG': pg.transform.scale(pg.image.load('img/big_blue.png'), (IMGSIZE, IMGSIZE)),
-    'FAST': pg.transform.scale(pg.image.load('img/fast_blue.png'), (IMGSIZE, IMGSIZE)),
-    'REGULAR': pg.transform.scale(pg.image.load('img/regular_blue.png'), (IMGSIZE, IMGSIZE)),
-    'SMART': pg.transform.scale(pg.image.load('img/smart_blue.png'), (IMGSIZE, IMGSIZE)),
-    'TOUGH': pg.transform.scale(pg.image.load('img/tough_blue.png'), (IMGSIZE, IMGSIZE)),
-    'RIP': pg.transform.scale(pg.image.load('img/rip_blue.png'), (IMGSIZE, IMGSIZE))
+    'BIG': pg.transform.scale(pg.image.load('img/big_blue.png'), (PIECESIZE, PIECESIZE)),
+    'FAST': pg.transform.scale(pg.image.load('img/fast_blue.png'), (PIECESIZE, PIECESIZE)),
+    'REGULAR': pg.transform.scale(pg.image.load('img/regular_blue.png'), (PIECESIZE, PIECESIZE)),
+    'SMART': pg.transform.scale(pg.image.load('img/smart_blue.png'), (PIECESIZE, PIECESIZE)),
+    'TOUGH': pg.transform.scale(pg.image.load('img/tough_blue.png'), (PIECESIZE, PIECESIZE)),
+    'RIP': pg.transform.scale(pg.image.load('img/rip_blue.png'), (PIECESIZE, PIECESIZE))
 }
 
 # initial positions
 
 PINK_POS = [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]]
 BLUE_POS = [[0, 10], [1, 10], [2, 10], [3, 10], [4, 10], [5, 10]]
+
+
+# strength cards
+
+PINK_CARDS = {
+    '1': pg.transform.scale(pg.image.load('img/card_pink_1.png'), CARDSIZE),
+    '2': pg.transform.scale(pg.image.load('img/card_pink_2.png'), CARDSIZE),
+    '3': pg.transform.scale(pg.image.load('img/card_pink_3.png'), CARDSIZE),
+    '4': pg.transform.scale(pg.image.load('img/card_pink_4.png'), CARDSIZE),
+    '5': pg.transform.scale(pg.image.load('img/card_pink_5.png'), CARDSIZE),
+    '6': pg.transform.scale(pg.image.load('img/card_pink_6.png'), CARDSIZE)
+}
+
+BLUE_CARDS = {
+    '1': pg.transform.scale(pg.image.load('img/card_blue_1.png'), CARDSIZE),
+    '2': pg.transform.scale(pg.image.load('img/card_blue_2.png'), CARDSIZE),
+    '3': pg.transform.scale(pg.image.load('img/card_blue_3.png'), CARDSIZE),
+    '4': pg.transform.scale(pg.image.load('img/card_blue_4.png'), CARDSIZE),
+    '5': pg.transform.scale(pg.image.load('img/card_blue_5.png'), CARDSIZE),
+    '6': pg.transform.scale(pg.image.load('img/card_blue_6.png'), CARDSIZE)
+}

@@ -14,10 +14,12 @@ MVP2
 Objective:
 
     - select a piece and see possible moves (displacements)
-        - matriz with zeros and pieces objects (eric)
-
-        - select a position and move (eric)
     
-        - wins the one who reaches te end (cat)
+        - wins the one who reaches te end (Cat)
+        - implement the displacement (Cat)
+        - implement the strengh cards (Cat)
+        - fix face_off in generate displacements (Eric)
+        - fix tests (Eric)
+        - pass move (Eric)
 
 
