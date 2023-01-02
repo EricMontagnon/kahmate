@@ -181,8 +181,8 @@ class Board:
         for displacement in possible_displacements:
             x = displacement.new_position[1]
             y = displacement.new_position[0]
-            if displacement.face_off_opponent is not None :
-                pg.draw.rect(screen, list_reds[(x + y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH,GRIDWIDTH))
+            if displacement.face_off_opponent:
+                pg.draw.rect(screen, list_reds[(x + y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
             else:
                 pg.draw.rect(screen, list_cols[(x+y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
@@ -230,24 +230,6 @@ class Displacement(Move):
     def __str__(self):
         return "Displacement of the piece " + str(self.piece.name) + " to the position : " + str(self.new_position)
 
-    # def play(self, game: Game):
-    #     if self.face_off_opponent is None:
-    #         self.piece.position = self.new_position
-    #         if self.piece.has_ball:
-    #             game.update_ball_position(self.new_position)
-    #     else:
-    #         result_face_off = game.face_off(self.piece, self.face_off_opponent)
-    #         if result_face_off == "Denfense wins!":
-    #             position = self.piece.position
-    #             if self.piece.has_ball:
-    #                 game.update_ball_position([position[0], position[1] - 1])
-    #             self.piece.is_down = True
-    #         else:
-    #             self.piece.position = self.new_position,
-    #             if self.piece.has_ball:
-    #                 game.update_ball_position(self.new_position)
-    #
-    #             self.face_off_opponent.is_down = True
 class Pass(Move):
     """
     The move of passing the ball to another piece.

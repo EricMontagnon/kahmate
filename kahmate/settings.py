@@ -43,10 +43,12 @@ BLUE_IMG = {
     'RIP': pg.transform.scale(pg.image.load('img/rip_blue.png'), (PIECESIZE, PIECESIZE))
 }
 
+# path.itrdir()
+
 # initial positions
 
-BLUE_POS = [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]]
-PINK_POS = [[0, 10], [1, 10], [2, 10], [3, 10], [4, 10], [5, 10]]
+BLUE_POS = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
+PINK_POS = [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1)]
 
 
 # strength cards

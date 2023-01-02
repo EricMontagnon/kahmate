@@ -1,4 +1,5 @@
 from kahmate import model
+from kahmate.settings import *
 
 i_limit = 600
 j_limit = 800
