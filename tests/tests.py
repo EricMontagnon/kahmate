@@ -8,7 +8,7 @@ j_limit = 800
 def test_initialisation_piece():
     piece1 = model.Piece(model.PieceType.BIG)
     piece1.position = [100, 100]
-    assert str(piece1) == "The big guy located at [100, 100] does not have the ball and is ready to play"
+    assert str(piece1) == "The BIG piece is located at [100, 100]"
 
 
 # def test_initialisation_player():
