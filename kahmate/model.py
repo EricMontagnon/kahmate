@@ -211,24 +211,6 @@ class Displacement(Move):
     def __str__(self):
         return "Displacement of the piece " + str(self.piece.name) + " to the position : " + str(self.new_position)
 
-    # def play(self, game: Game):
-    #     if self.face_off_opponent is None:
-    #         self.piece.position = self.new_position
-    #         if self.piece.has_ball:
-    #             game.update_ball_position(self.new_position)
-    #     else:
-    #         result_face_off = game.face_off(self.piece, self.face_off_opponent)
-    #         if result_face_off == "Denfense wins!":
-    #             position = self.piece.position()
-    #             if self.piece.has_ball:
-    #                 game.update_ball_position([position[0], position[1] - 1])
-    #             self.piece.is_down = True
-    #         else:
-    #             self.piece.position = self.new_position,
-    #             if self.piece.has_ball:
-    #                 game.update_ball_position(self.new_position)
-    #             self.face_off_opponent.is_down = True
-
 
 class Pass(Move):
     """

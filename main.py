@@ -88,7 +88,7 @@ class Game:
                 self.ball_position = move.new_position
         else:
             result_face_off = game.face_off(move.piece, move.face_off_opponent)
-            if result_face_off == "Denfense wins!":
+            if result_face_off == "Defense wins!":
                 position = move.piece.position()
                 if move.piece.has_ball:
                     self.ball_position = [position[0], position[1] - 1]
@@ -127,16 +127,5 @@ if __name__ == "__main__":
     second_player = input('Name of the second player:')
 
     game = Game([(first_player, model.PlayerColor.BLUE), (second_player, model.PlayerColor.PINK)])
-    # game.update_board()
-    # possible_displacements = game.generate_displacement(game.players[1].pieces[0])
-    # displacement = possible_displacements[2]
-    # displacement.play(game)
-    #
-    # print("LIST OF DISPLACEMENTS")
-    # for d in possible_displacements:
-    #     print(d)
 
     game.run()
-
-
-
