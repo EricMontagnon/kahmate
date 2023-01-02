@@ -3,6 +3,7 @@ from kahmate import model
 import pygame as pg
 
 
+
 def get_row_col_from_mouse(pos):
     x, y = pos
     row = y // GRIDWIDTH
@@ -20,6 +21,7 @@ class Game:
         # screen settings
         self.board = model.Board()
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+        self.turn_count = 0
         icon = pg.image.load('img/ball.png')
         pg.display.set_icon(icon)
         pg.display.set_caption(TITLE)
@@ -143,7 +145,7 @@ if __name__ == "__main__":
     second_player = input('Name of the second player:')
 
     game = Game([(first_player, model.PlayerColor.BLUE), (second_player, model.PlayerColor.PINK)])
-
+    print(game.players[1])
     game.run()
 
 
