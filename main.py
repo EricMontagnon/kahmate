@@ -34,7 +34,9 @@ class Game:
             else:
                 assert False, "unknown player definition"
         self._next_player = 0
-        self.ball_position = [0, 0]
+        self.players[0].pieces[0].has_ball = True
+        self.ball_position = self.players[0].pieces[0].position
+        print("ball position = ", self.ball_position)
         self.valid_moves = []
         self.board.update_board(self.players)
 
@@ -42,8 +44,12 @@ class Game:
         return self.players[self._next_player]
 
     def update(self):
-        self.board.draw(self.screen, self.players)
-        pg.display.update()
+        if self.valid_moves:
+            self.board.draw(self.screen, self.players, self.ball_position, self.valid_moves)
+            pg.display.update()
+        else:
+            self.board.draw(self.screen, self.players, self.ball_position)
+            pg.display.update()
 
     def __str__(self):
         ans = "Description of the first team :"
@@ -62,7 +68,16 @@ class Game:
                     distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
                     empty_case = self.board.matrix[i][j] is None
                     if distance_ok and empty_case:
-                        self.valid_moves.append(model.Displacement(piece, [i, j], None))
+                        face_off_opponent = None
+                        distance = abs(i-piece.position[0]) + abs(j-piece.position[1])
+                        for k in range(distance - 1):
+                            case_x = int(((k+1)/distance)*i+((distance-(k+1))/distance)*piece.position[0])
+                            case_y = int(((k+1)/distance)*j+((distance-(k+1))/distance)*piece.position[1])
+                            if self.board.matrix[case_x][case_y] is not None:
+                                possible_foo = self.board.matrix[case_x][case_y]
+                                if possible_foo in self.players[(self._next_player+1) % 2].pieces:
+                                    face_off_opponent = possible_foo
+                        self.valid_moves.append(model.Displacement(piece, [i, j], face_off_opponent))
 
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
         attack_player = self.players[self._next_player]
@@ -88,13 +103,14 @@ class Game:
                 self.ball_position = move.new_position
         else:
             result_face_off = game.face_off(move.piece, move.face_off_opponent)
+            print(result_face_off)
             if result_face_off == "Defense wins!":
-                position = move.piece.position()
+                position = move.piece.position
                 if move.piece.has_ball:
                     self.ball_position = [position[0], position[1] - 1]
                 move.piece.is_down = True
             else:
-                move.piece.position = move.new_position,
+                move.piece.position = move.new_position
                 if move.piece.has_ball:
                     self.ball_position = move.new_position
                 move.face_off_opponent.is_down = True
@@ -118,7 +134,7 @@ class Game:
                                 self._next_player = (self._next_player + 1) % 2
                     else:
                         self.generate_displacement(x, y)
-
+                        self.board.draw_displacements(self.valid_moves, self.screen)
             self.update()
 
 
@@ -129,3 +145,6 @@ if __name__ == "__main__":
     game = Game([(first_player, model.PlayerColor.BLUE), (second_player, model.PlayerColor.PINK)])
 
     game.run()
+
+
+
