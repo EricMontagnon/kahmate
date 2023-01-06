@@ -1,15 +1,14 @@
 import dataclasses
 import enum
 import random
-from typing import Tuple, Optional
-
+from typing import Optional
 from kahmate.settings import *
 import pygame as pg
 
 
-class PlayerColor(enum.Enum):
-    PINK = PINK_IMG
-    BLUE = BLUE_IMG
+class Color(enum.Enum):
+    PINK = 'pink'
+    BLUE = 'blue'
 
 
 class PieceType(enum.Enum):
@@ -61,12 +60,18 @@ class Piece:
     def piece_type(self):
         return self._piece_type
 
+    def screen_position(self):
+        x = self.position[1] * GRIDWIDTH + (GRIDWIDTH - PIECESIZE) / 2
+        y = self.position[0] * GRIDWIDTH + (GRIDWIDTH - PIECESIZE) / 2
+        return x, y
+
     def __str__(self):
         ans = "The " + self.piece_type.name + " piece is located at " + str(self.position)
         return ans
 
 
 class Player:
+
     """
     A player is defined by:
     - the list of his pieces
@@ -78,32 +83,33 @@ class Player:
         self.pieces = [Piece(piece_type) for piece_type in PieceType]
         self.pieces.append(Piece(PieceType.REGULAR))
         self._color = color
-        self._strength_deck = [i for i in range(1, 6)]
+        self.strength_deck = [i for i in range(1, 6)]
+        self.pieces_img = {}
+        for piece in self.pieces:
+            path = piece.name + '_' + self._color.value + '.png'
+            self.pieces_img[piece.name] = pg.transform.scale(pg.image.load(IMG_PATH / path), (PIECESIZE, PIECESIZE))
+        path = 'rip_' + self._color.value + '.png'
+        self.pieces_img['rip'] = pg.transform.scale(pg.image.load(IMG_PATH / path), (PIECESIZE, PIECESIZE))
+        self.strength_deck_img = {}
+        for i in range(1, 6):
+            path = 'card_' + self._color.value + '_' + str(i) + '.png'
+            self.strength_deck_img[i] = pg.transform.scale(pg.image.load(IMG_PATH / path), CARDSIZE)
 
     @property
     def color(self):
-        return self._color
+        return self.color
 
     def draw(self, screen):
         for piece in self.pieces:
-            if piece.piece_type == PieceType.REGULAR:
-                screen.blit(self._color.value['REGULAR'], (piece.position[1]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2, piece.position[0]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2))
-            elif piece.piece_type == PieceType.BIG:
-                screen.blit(self._color.value['BIG'], (piece.position[1]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2, piece.position[0]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2))
-            elif piece.piece_type == PieceType.FAST:
-                screen.blit(self._color.value['FAST'], (piece.position[1]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2, piece.position[0]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2))
-            elif piece.piece_type == PieceType.SMART:
-                screen.blit(self._color.value['SMART'], (piece.position[1]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2, piece.position[0]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2))
-            elif piece.piece_type == PieceType.TOUGH:
-                screen.blit(self._color.value['TOUGH'], (piece.position[1]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2, piece.position[0]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2))
+            screen.blit(self.pieces_img[piece.name], piece.screen_position())
             if piece.is_down:
-                screen.blit(self._color.value['RIP'], (piece.position[1]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2, piece.position[0]*GRIDWIDTH + (GRIDWIDTH-PIECESIZE)/2))
+                screen.blit(self.pieces_img['rip'], (piece.screen_position()))
 
     def pick_strength(self):
-        random.shuffle(self._strength_deck)
-        picked = self._strength_deck.pop()
-        if len(self._strength_deck) == 0:
-            self._strength_deck = [i for i in range(1, 6)]
+        random.shuffle(self.strength_deck)
+        picked = self.strength_deck.pop()
+        if len(self.strength_deck) == 0:
+            self.strength_deck = [i for i in range(1, 6)]
         return picked
 
 
@@ -118,7 +124,7 @@ class HumanPlayer(Player):
         self.init_positions()
 
     def init_positions(self):
-        if self.color == PlayerColor.PINK:
+        if self._color == Color.PINK.value:
             init_pos = PINK_POS
         else:
             init_pos = BLUE_POS
@@ -186,7 +192,7 @@ class Board:
             else:
                 pg.draw.rect(screen, list_cols[(x+y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
-    def draw(self, screen, players, ball_position, valid_moves=None):
+    def draw(self, screen, players, ball_position, valid_moves):
         if valid_moves:
             self.draw_bgd(screen)
             self.draw_displacements(valid_moves, screen)

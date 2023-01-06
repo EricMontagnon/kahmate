@@ -3,7 +3,6 @@ from kahmate import model
 import pygame as pg
 
 
-
 def get_row_col_from_mouse(pos):
     x, y = pos
     row = y // GRIDWIDTH
@@ -38,7 +37,6 @@ class Game:
         self._next_player = 0
         self.players[0].pieces[0].has_ball = True
         self.ball_position = self.players[0].pieces[0].position
-        print("ball position = ", self.ball_position)
         self.valid_moves = []
         self.board.update_board(self.players)
 
@@ -46,12 +44,8 @@ class Game:
         return self.players[self._next_player]
 
     def update(self):
-        if self.valid_moves:
-            self.board.draw(self.screen, self.players, self.ball_position, self.valid_moves)
-            pg.display.update()
-        else:
-            self.board.draw(self.screen, self.players, self.ball_position)
-            pg.display.update()
+        self.board.draw(self.screen, self.players, self.ball_position, self.valid_moves)
+        pg.display.update()
 
     def __str__(self):
         ans = "Description of the first team :"
@@ -144,8 +138,8 @@ if __name__ == "__main__":
     first_player = input('Name of the first player:')
     second_player = input('Name of the second player:')
 
-    game = Game([(first_player, model.PlayerColor.BLUE), (second_player, model.PlayerColor.PINK)])
-    print(game.players[1])
+    game = Game([(first_player, model.Color.BLUE), (second_player, model.Color.PINK)])
+    print(game.players[0].pieces_img)
     game.run()
 
 
