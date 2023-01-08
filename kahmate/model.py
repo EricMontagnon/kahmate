@@ -39,6 +39,7 @@ class Piece:
         self.position = []
         self.has_ball = False
         self.is_down = False
+        self.turn_death = -1
 
     @ property
     def speed(self):
@@ -124,7 +125,7 @@ class HumanPlayer(Player):
         self.init_positions()
 
     def init_positions(self):
-        if self._color == Color.PINK.value:
+        if self._color == Color.PINK:
             init_pos = PINK_POS
         else:
             init_pos = BLUE_POS

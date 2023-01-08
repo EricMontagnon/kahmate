@@ -39,11 +39,19 @@ class Game:
         self.ball_position = self.players[0].pieces[0].position
         self.valid_moves = []
         self.board.update_board(self.players)
+        self.turn_count = 0
 
     def next_player(self):
         return self.players[self._next_player]
 
     def update(self):
+        for player in self.players:
+            for piece in player.pieces :
+                if piece.position == self.ball_position:
+                    piece.has_ball = True
+                if -1 < piece.turn_death + 3 < self.turn_count:
+                    piece.is_down = False
+                    piece.turn_death = -1
         self.board.draw(self.screen, self.players, self.ball_position, self.valid_moves)
         pg.display.update()
 
@@ -58,7 +66,7 @@ class Game:
     def generate_displacement(self, x, y):
         # LOOPS TO BE OPTIMIZED
         piece = self.board.matrix[x][y]
-        if piece in self.next_player().pieces:
+        if piece in self.next_player().pieces and not piece.is_down:
             for i in range(ROWS):
                 for j in range(COLS):
                     distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
@@ -103,14 +111,22 @@ class Game:
             if result_face_off == "Defense wins!":
                 position = move.piece.position
                 if move.piece.has_ball:
-                    self.ball_position = [position[0], position[1] - 1]
+                    move.piece.has_ball = False
+                    if self.next_player()._color == model.Color.PINK:
+                        self.ball_position = [position[0], position[1] + 1]
+                    else :
+                        self.ball_position = [position[0], position[1] - 1]
                 move.piece.is_down = True
+                move.piece.turn_death = self.turn_count
             else:
                 move.piece.position = move.new_position
                 if move.piece.has_ball:
                     self.ball_position = move.new_position
                 move.face_off_opponent.is_down = True
+                move.face_off_opponent.turn_death = self.turn_count
         self.board.update_board(self.players)
+        self.turn_count += 1
+        self._next_player = (self.turn_count // 2) % 2
 
     def run(self):
         while self.running:
@@ -127,7 +143,6 @@ class Game:
                             if [x, y] == move.new_position:
                                 self.play(move)
                                 self.valid_moves = []
-                                self._next_player = (self._next_player + 1) % 2
                     else:
                         self.generate_displacement(x, y)
                         self.board.draw_displacements(self.valid_moves, self.screen)
@@ -139,7 +154,6 @@ if __name__ == "__main__":
     second_player = input('Name of the second player:')
 
     game = Game([(first_player, model.Color.BLUE), (second_player, model.Color.PINK)])
-    print(game.players[0].pieces_img)
     game.run()
 
 
