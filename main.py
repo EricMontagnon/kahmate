@@ -46,7 +46,7 @@ class Game:
 
     def update(self):
         for player in self.players:
-            for piece in player.pieces :
+            for piece in player.pieces:
                 if piece.position == self.ball_position:
                     piece.has_ball = True
                 if -1 < piece.turn_death + 3 < self.turn_count:
@@ -75,7 +75,6 @@ class Game:
                     face_off_opponent = possible_foo
         return face_off_opponent
 
-
     def generate_displacement(self, x, y):
         # LOOPS TO BE OPTIMIZED
         piece = self.board.matrix[x][y]
@@ -103,8 +102,7 @@ class Game:
                         possible_friend = self.board.matrix[i][j]
                         if possible_friend in self.players[self._next_player].pieces:
                             face_off_opponent = self.opponent_search([i, j], piece.position)
-                            self.valid_moves.append(model.Pass(piece, possible_friend,face_off_opponent))
-
+                            self.valid_moves.append(model.Pass(piece, possible_friend, face_off_opponent))
 
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
         attack_player = self.players[self._next_player]
@@ -137,7 +135,7 @@ class Game:
                     move.piece.has_ball = False
                     if self.next_player()._color == model.Color.PINK:
                         self.ball_position = [position[0], position[1] + 1]
-                    else :
+                    else:
                         self.ball_position = [position[0], position[1] - 1]
                 move.piece.is_down = True
                 move.piece.turn_death = self.turn_count
@@ -190,6 +188,3 @@ if __name__ == "__main__":
 
     game = Game([(first_player, model.Color.BLUE), (second_player, model.Color.PINK)])
     game.run()
-
-
-
