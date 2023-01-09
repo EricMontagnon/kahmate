@@ -63,6 +63,19 @@ class Game:
         ans += "\n" + str(self.players[1])
         return ans
 
+    def opponent_search(self, search_position, piece_position):
+        face_off_opponent = None
+        distance = abs(search_position[0] - piece_position[0]) + abs(search_position[1] - piece_position[1])
+        for k in range(distance - 1):
+            case_x = int(((k + 1) / distance) * search_position[0] + ((distance - (k + 1)) / distance) * piece_position[0])
+            case_y = int(((k + 1) / distance) * search_position[1] + ((distance - (k + 1)) / distance) * piece_position[1])
+            if self.board.matrix[case_x][case_y] is not None:
+                possible_foo = self.board.matrix[case_x][case_y]
+                if possible_foo in self.players[(self._next_player + 1) % 2].pieces:
+                    face_off_opponent = possible_foo
+        return face_off_opponent
+
+
     def generate_displacement(self, x, y):
         # LOOPS TO BE OPTIMIZED
         piece = self.board.matrix[x][y]
@@ -72,16 +85,26 @@ class Game:
                     distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
                     empty_case = self.board.matrix[i][j] is None
                     if distance_ok and empty_case:
-                        face_off_opponent = None
-                        distance = abs(i-piece.position[0]) + abs(j-piece.position[1])
-                        for k in range(distance - 1):
-                            case_x = int(((k+1)/distance)*i+((distance-(k+1))/distance)*piece.position[0])
-                            case_y = int(((k+1)/distance)*j+((distance-(k+1))/distance)*piece.position[1])
-                            if self.board.matrix[case_x][case_y] is not None:
-                                possible_foo = self.board.matrix[case_x][case_y]
-                                if possible_foo in self.players[(self._next_player+1) % 2].pieces:
-                                    face_off_opponent = possible_foo
+                        face_off_opponent = self.opponent_search([i, j], piece.position)
                         self.valid_moves.append(model.Displacement(piece, [i, j], face_off_opponent))
+
+    def generate_pass(self, x, y):
+        piece = self.board.matrix[x][y]
+        if piece in self.next_player().pieces and not piece.is_down:
+            for i in range(max(0, piece.position[0]-2), min(ROWS, piece.position[0]+3)):
+                if self._next_player == 0:
+                    mini = max(0, piece.position[1] - 2)
+                    maxi = piece.position[1]
+                else:
+                    mini = piece.position[1]
+                    maxi = min(ROWS, piece.position[1]+2)
+                for j in range(mini, maxi):
+                    if self.board.matrix[i][j] is not None :
+                        possible_friend = self.board.matrix[i][j]
+                        if possible_friend in self.players[self._next_player].pieces:
+                            face_off_opponent = self.opponent_search([i, j], piece.position)
+                            self.valid_moves.append(model.Pass(piece, possible_friend,face_off_opponent))
+
 
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
         attack_player = self.players[self._next_player]
@@ -100,7 +123,7 @@ class Game:
             else:
                 return "Defense wins!"
 
-    def play(self, move: model.Displacement):
+    def play_displacement(self, move: model.Displacement):
         if move.face_off_opponent is None:
             move.piece.position = move.new_position
             if move.piece.has_ball:
@@ -128,6 +151,12 @@ class Game:
         self.turn_count += 1
         self._next_player = (self.turn_count // 2) % 2
 
+    def play_pass(self, move: model.Pass):
+        move.piece.has_ball = False
+        move.new_piece.has_ball = True
+        self.ball_position = move.new_piece.position
+        self.board.update_board(self.players)
+
     def run(self):
         while self.running:
             for event in pg.event.get():
@@ -140,11 +169,17 @@ class Game:
                     x, y = get_row_col_from_mouse(mouse_pos)
                     if self.valid_moves:
                         for move in self.valid_moves:
-                            if [x, y] == move.new_position:
-                                self.play(move)
-                                self.valid_moves = []
+                            if type(move) == model.Displacement:
+                                if [x, y] == move.new_position:
+                                    self.play_displacement(move)
+                                    self.valid_moves = []
+                            if type(move) == model.Pass:
+                                if [x, y] == move.new_piece.position:
+                                    self.play_pass(move)
+                                    self.valid_moves = []
                     else:
                         self.generate_displacement(x, y)
+                        self.generate_pass(x, y)
                         self.board.draw_displacements(self.valid_moves, self.screen)
             self.update()
 

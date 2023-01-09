@@ -186,12 +186,13 @@ class Board:
         list_cols = [VERY_LIGHT_GREEN, LIGHT_GREEN]
         list_reds = [LIGHT_RED, RED]
         for displacement in possible_displacements:
-            x = displacement.new_position[1]
-            y = displacement.new_position[0]
-            if displacement.face_off_opponent:
-                pg.draw.rect(screen, list_reds[(x + y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
-            else:
-                pg.draw.rect(screen, list_cols[(x+y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+            if type(displacement) == Displacement:
+                x = displacement.new_position[1]
+                y = displacement.new_position[0]
+                if displacement.face_off_opponent:
+                    pg.draw.rect(screen, list_reds[(x + y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+                else:
+                    pg.draw.rect(screen, list_cols[(x+y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
     def draw(self, screen, players, ball_position, valid_moves):
         if valid_moves:
@@ -242,8 +243,15 @@ class Pass(Move):
     The move of passing the ball to another piece.
     """
 
-    def __init__(self):
+    def __init__(self, piece: Piece, new_piece: Piece, face_off_opponent: Optional[Piece]):
         super().__init__()
+        self.piece = piece
+        self.new_piece = new_piece
+        self.face_off_opponent = face_off_opponent
+
+    def __str__(self):
+        return "Pass from piece " + str(self.piece.name) + " to piece " + str(self.new_piece.name)
+
 
     def __str__(self):
         return "pass"
