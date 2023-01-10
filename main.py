@@ -92,7 +92,8 @@ class Game:
         """
         for player in self.players:
             for piece in player.pieces:
-                if piece.position == self.ball_position:
+                if piece.position == self.ball_position and piece.has_ball == False:
+                    print("they are at the same position :o")
                     piece.has_ball = True
                 if -1 < piece.turn_death + 3 < self.turn_count:
                     piece.is_down = False
@@ -112,7 +113,7 @@ class Game:
         """
         inputs : search_position = position of the pass or of the displacement desire
                 piece_position = position of the active piece
-        output : face off opponent if there is a opponent between the two positions
+        output : face off opponent if there is an opponent between the two positions
         """
         face_off_opponent = None
         distance = abs(search_position[0] - piece_position[0]) + abs(search_position[1] - piece_position[1])
@@ -121,7 +122,7 @@ class Game:
             case_y = int(((k + 1) / distance) * search_position[1] + ((distance - (k + 1)) / distance) * piece_position[1])
             if self.board.matrix[case_x][case_y] is not None:
                 possible_foo = self.board.matrix[case_x][case_y]
-                if possible_foo in self.players[(self._next_player + 1) % 2].pieces:
+                if possible_foo in self.players[(self._next_player + 1) % 2].pieces and not possible_foo.is_down:
                     face_off_opponent = possible_foo
         return face_off_opponent
 
@@ -131,7 +132,7 @@ class Game:
         output : if a piece in the right team has [x,y] for position, list of model.Displacement possible for the piece
         """
         piece = self.board.matrix[x][y]
-        if piece in self.next_player().pieces and not piece.is_down:
+        if piece in self.next_player().pieces and not piece.is_down and not piece.has_moved:
             for i in range(ROWS):
                 for j in range(COLS):
                     distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
@@ -139,6 +140,10 @@ class Game:
                     if distance_ok and empty_case:
                         face_off_opponent = self.opponent_search([i, j], piece.position)
                         self.valid_moves.append(model.Displacement(piece, [i, j], face_off_opponent))
+                    if not empty_case:
+                        possible_opponent = self.board.matrix[i][j]
+                        if possible_opponent in self.players[(self._next_player + 1) % 2].pieces and possible_opponent.has_ball:
+                            self.valid_moves.append(model.Tackle(piece, possible_opponent))
 
     def generate_pass(self, x: int, y: int):
         """
@@ -146,20 +151,24 @@ class Game:
         output : if a piece in the right team has [x,y] for position, list of model.Pass possible for the piece
         """
         piece = self.board.matrix[x][y]
-        if piece in self.next_player().pieces and not piece.is_down:
+        if piece in self.next_player().pieces and not piece.is_down and piece.has_ball:
             for i in range(max(0, piece.position[0]-2), min(ROWS, piece.position[0]+3)):
                 if self._next_player == 0:
                     mini = max(0, piece.position[1] - 2)
                     maxi = piece.position[1]
                 else:
-                    mini = piece.position[1]
-                    maxi = min(ROWS, piece.position[1]+2)
+                    mini = min(ROWS-1, piece.position[1]+1)
+                    maxi = min(ROWS, piece.position[1]+3)
                 for j in range(mini, maxi):
                     if self.board.matrix[i][j] is not None :
                         possible_friend = self.board.matrix[i][j]
                         if possible_friend in self.players[self._next_player].pieces:
                             face_off_opponent = self.opponent_search([i, j], piece.position)
+                            print("NEW PASS")
+                            print("piece : ", piece)
+                            print("possible friend : ", possible_friend)
                             self.valid_moves.append(model.Pass(piece, possible_friend, face_off_opponent))
+
 
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
         """
@@ -171,13 +180,17 @@ class Game:
         defense_player = self.players[(self._next_player + 1) % 2]
         attack_score = attack_player.pick_strength() + attack_piece.attack
         defense_score = defense_player.pick_strength() + defense_piece.defense
-        if attack_score > defense_score:
+        if attack_score >= defense_score + 2:
+            return "Plaquage parfait!"
+        if defense_score + 2 > attack_score > defense_score:
             return "Attack wins!"
         if defense_score > attack_score:
             return "Defense wins!"
         else:
             attack_pick = attack_player.pick_strength() + attack_piece.attack
             defense_pick = defense_player.pick_strength() + defense_piece.defense
+            if attack_score >= defense_score + 2:
+                return "Plaquage parfait!"
             if attack_pick > defense_pick:
                 return "Attack wins!"
             else:
@@ -213,6 +226,10 @@ class Game:
                 move.face_off_opponent.is_down = True
                 move.face_off_opponent.turn_death = self.turn_count
         self.board.update_board(self.players)
+        move.piece.has_moved = True
+        if self.turn_count % 2 == 1:
+            for piece in self.next_player().pieces:
+                piece.has_moved = False
         self.turn_count += 1
         self._next_player = (self.turn_count // 2) % 2
 
@@ -222,10 +239,48 @@ class Game:
         action : if no face off -> the ball changes player
             if face off -> to be implemented
         """
+        self.ball_position = move.new_piece.position
         move.piece.has_ball = False
         move.new_piece.has_ball = True
-        self.ball_position = move.new_piece.position
+        for k in range(2):
+            print("player", k)
+            player = self.players[k]
+            for i in range(6):
+                piece = player.pieces[i]
+                print("piece", i, ": ", piece.has_ball)
         self.board.update_board(self.players)
+
+    def play_tackle(self, move: model.Tackle):
+        """
+        input : move : model.Pass = Pass chosen to be played
+        action : if no face off -> the ball changes player
+            if face off -> to be implemented
+        """
+        result_face_off = self.face_off(move.piece, move.opponent)
+        if result_face_off == "Defense wins!":
+            move.piece.is_down = True
+            move.piece.turn_death = self.turn_count
+        if result_face_off == "Plaquage parfait!":
+            self.ball_position = move.opponent.position
+            move.opponent.has_ball = False
+            move.opponent.is_down = True
+            move.opponent.turn_death = self.turn_count
+            move.piece.has_ball = True
+        if result_face_off == "Attack wins!":
+            move.opponent.has_ball = False
+            move.opponent.is_down = True
+            move.opponent.turn_death = self.turn_count
+            position = move.opponent.position
+            if self.players[(self._next_player+1)%2]._color == model.Color.PINK:
+                self.ball_position = [position[0], position[1] + 1]
+            else:
+                self.ball_position = [position[0], position[1] - 1]
+        self.board.update_board(self.players)
+        if self.turn_count % 2 == 1:
+            for piece in self.next_player().pieces:
+                piece.has_moved = False
+        self.turn_count += 1
+        self._next_player = (self.turn_count // 2) % 2
 
     def run(self):
         """
@@ -235,6 +290,8 @@ class Game:
         once movements have been calculated :
             wait for a movement to be selected and play it
         """
+        kori=0
+        iori=0
         while self.running:
             for event in pg.event.get():
                 self.clock.tick(FPS)
@@ -254,10 +311,23 @@ class Game:
                                 if [x, y] == move.new_piece.position:
                                     self.play_pass(move)
                                     self.valid_moves = []
+                            if type(move) == model.Tackle:
+                                if [x, y] == move.opponent.position:
+                                    self.play_tackle(move)
+                                    self.valid_moves = []
                     else:
                         self.generate_displacement(x, y)
                         self.generate_pass(x, y)
                         self.board.draw_displacements(self.valid_moves, self.screen)
+                    for k in range(2):
+                        player=self.players[k]
+                        for i in range(6):
+                            piece = player.pieces[i]
+                            if piece.has_ball and (k!=kori or i!= iori):
+                                kori=k
+                                iori=i
+                                print("new owner of the ball : ", k, i)
+
             self.update()
 
 

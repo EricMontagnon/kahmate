@@ -40,6 +40,7 @@ class Piece:
         self.has_ball = False
         self.is_down = False
         self.turn_death = -1
+        self.has_moved = False
 
     @ property
     def speed(self):
@@ -262,8 +263,10 @@ class Tackle(Move):
     The move of Forcing a piece's way through, defined by the two pieces
     """
 
-    def __init__(self):
+    def __init__(self, piece : Piece, opponent : Piece):
         super().__init__()
+        self.piece = piece
+        self.opponent = opponent
 
     def __str__(self):
         return "Tackle"
