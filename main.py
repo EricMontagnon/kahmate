@@ -4,6 +4,9 @@ import pygame as pg
 
 
 def get_row_col_from_mouse(pos):
+    """
+    Converts the position of the mouse into a position on the grid
+    """
     x, y = pos
     row = y // GRIDWIDTH
     col = x // GRIDWIDTH
@@ -11,16 +14,43 @@ def get_row_col_from_mouse(pos):
 
 
 class Game:
+    """
+    PARAMETERS :
+    running : boolean           -> state of the game
+    clock
+    screen
+    players : list of model.Players
+    _next_player : int          -> index of the next player
+    ball_position : [int, int]  -> used to display the ball
+    board : model.Board         -> contains the players' pieces in a more practical way
+    valid_moves : list of moves -> possible moves for the selected piece
+    turn_count : int            -> used to decide whose turn it is and when to resuscitate a piece
+
+    METHODS :
+    __init__(players)        -> create a game from the names of the players and their colors
+    next_player() : Player   -> outputs the next player
+    update()                -> update the ball's owner, which piece is down, the screen
+    __str__()               -> creates a description of the deck in str
+    opponent_search(search_pos, piece_pos) -> checks if there is an opponent between search_pos and piece_pos)
+    generate_displacement(x, y) -> adds in _valid_moves a list of model.Displacement for the piece located at [x, y]
+    generate_pass(x, y)         -> adds in _valid_moves a list of model.Pass for the piece located at [x, y]
+    face_off(attack_piece, defense_piece) -> simulates a face off between two pieces for example in a conflict of disp
+    play_displacement(move : model.Displacement) -> does the changes necessary for a displacement
+    play_pass(move : model.Pass) -> does the changes necessary for a Pass
+    run()                   -> plays the game
+    """
     def __init__(self, players):
+        """
+        Entry :  list of players [(name_player1 : str, name_player2), (color_player1: model.Color, color_player2)]
+        Output : Game ready to play
+        """
         # init pygame
         pg.init()
         self.running = True
         self.clock = pg.time.Clock()
 
         # screen settings
-        self.board = model.Board()
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-        self.turn_count = 0
         icon = pg.image.load('img/ball.png')
         pg.display.set_icon(icon)
         pg.display.set_caption(TITLE)
@@ -35,16 +65,31 @@ class Game:
             else:
                 assert False, "unknown player definition"
         self._next_player = 0
+
+        # define ball
         self.players[0].pieces[0].has_ball = True
         self.ball_position = self.players[0].pieces[0].position
-        self.valid_moves = []
+
+        # define board
+        self.board = model.Board()
         self.board.update_board(self.players)
+
+        # define move parameters
+        self.valid_moves = []
         self.turn_count = 0
 
     def next_player(self):
+        """
+        output : player
+        """
         return self.players[self._next_player]
 
     def update(self):
+        """
+        If a player has the same position as the ball, it takes it
+        If a player has been down for long enough, it comes back up
+        The screen is updated
+        """
         for player in self.players:
             for piece in player.pieces:
                 if piece.position == self.ball_position:
@@ -64,6 +109,11 @@ class Game:
         return ans
 
     def opponent_search(self, search_position, piece_position):
+        """
+        inputs : search_position = position of the pass or of the displacement desire
+                piece_position = position of the active piece
+        output : face off opponent if there is a opponent between the two positions
+        """
         face_off_opponent = None
         distance = abs(search_position[0] - piece_position[0]) + abs(search_position[1] - piece_position[1])
         for k in range(distance - 1):
@@ -75,8 +125,11 @@ class Game:
                     face_off_opponent = possible_foo
         return face_off_opponent
 
-    def generate_displacement(self, x, y):
-        # LOOPS TO BE OPTIMIZED
+    def generate_displacement(self, x: int, y: int):
+        """
+        input : x, y position of the case to try
+        output : if a piece in the right team has [x,y] for position, list of model.Displacement possible for the piece
+        """
         piece = self.board.matrix[x][y]
         if piece in self.next_player().pieces and not piece.is_down:
             for i in range(ROWS):
@@ -87,7 +140,11 @@ class Game:
                         face_off_opponent = self.opponent_search([i, j], piece.position)
                         self.valid_moves.append(model.Displacement(piece, [i, j], face_off_opponent))
 
-    def generate_pass(self, x, y):
+    def generate_pass(self, x: int, y: int):
+        """
+        input : x, y position of the case to try
+        output : if a piece in the right team has [x,y] for position, list of model.Pass possible for the piece
+        """
         piece = self.board.matrix[x][y]
         if piece in self.next_player().pieces and not piece.is_down:
             for i in range(max(0, piece.position[0]-2), min(ROWS, piece.position[0]+3)):
@@ -105,6 +162,11 @@ class Game:
                             self.valid_moves.append(model.Pass(piece, possible_friend, face_off_opponent))
 
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
+        """
+        input : attack_piece = piece that want to move or pass the ball
+            defense_piece = piece which is in the way
+        output : result of the face off as a str
+        """
         attack_player = self.players[self._next_player]
         defense_player = self.players[(self._next_player + 1) % 2]
         attack_score = attack_player.pick_strength() + attack_piece.attack
@@ -122,6 +184,11 @@ class Game:
                 return "Defense wins!"
 
     def play_displacement(self, move: model.Displacement):
+        """
+        input : move : model.Displacement = Displacement chosen to be played
+        action : if no face off -> the piece is moved to new position
+            if face off -> face off, pieces displaced of put down according to the result, next_player updated
+        """
         if move.face_off_opponent is None:
             move.piece.position = move.new_position
             if move.piece.has_ball:
@@ -150,12 +217,24 @@ class Game:
         self._next_player = (self.turn_count // 2) % 2
 
     def play_pass(self, move: model.Pass):
+        """
+        input : move : model.Pass = Pass chosen to be played
+        action : if no face off -> the ball changes player
+            if face off -> to be implemented
+        """
         move.piece.has_ball = False
         move.new_piece.has_ball = True
         self.ball_position = move.new_piece.position
         self.board.update_board(self.players)
 
     def run(self):
+        """
+        one characteristic loop :
+        if no movement have been calculated :
+            generation of the possible displacements and passes stored in _valid_moves
+        once movements have been calculated :
+            wait for a movement to be selected and play it
+        """
         while self.running:
             for event in pg.event.get():
                 self.clock.tick(FPS)
