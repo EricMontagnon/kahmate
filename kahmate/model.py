@@ -183,30 +183,13 @@ class Board:
             for col in range(row % 2, COLS, 2):
                 pg.draw.rect(screen, GREEN, (col*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
-    def draw_displacements(self, possible_displacements, screen):
-        list_cols = [VERY_LIGHT_GREEN, LIGHT_GREEN]
-        list_reds = [LIGHT_RED, RED]
-        for displacement in possible_displacements:
-            if type(displacement) == Displacement:
-                x = displacement.new_position[1]
-                y = displacement.new_position[0]
-                if displacement.face_off_opponent:
-                    pg.draw.rect(screen, list_reds[(x + y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
-                else:
-                    pg.draw.rect(screen, list_cols[(x+y) % 2], ((displacement.new_position[1]) * GRIDWIDTH, (displacement.new_position[0]) * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
-
     def draw(self, screen, players, ball_position, valid_moves):
-        if valid_moves:
-            self.draw_bgd(screen)
-            self.draw_displacements(valid_moves, screen)
-            for player in players:
-                player.draw(screen)
-            screen.blit(BALL, (ball_position[1] * GRIDWIDTH, ball_position[0] * GRIDWIDTH))
-        else:
-            self.draw_bgd(screen)
-            for player in players:
-                player.draw(screen)
-            screen.blit(BALL, (ball_position[1] * GRIDWIDTH, ball_position[0] * GRIDWIDTH))
+        self.draw_bgd(screen)
+        for move in valid_moves:
+            move.draw(screen)
+        for player in players:
+            player.draw(screen)
+        screen.blit(BALL, (ball_position[1] * GRIDWIDTH, ball_position[0] * GRIDWIDTH))
 
     def update_board(self, players):
         self.matrix = [[None for _ in range(COLS)] for _ in range(ROWS)]
@@ -222,7 +205,9 @@ class Move:
     The parent class of all possible moves.
     """
 
-    def __init__(self):
+    def __init__(self, piece : Piece, second_position : [int, int]):
+        self.piece = piece
+        self.second_position = second_position
         pass
 
 
@@ -231,13 +216,59 @@ class Displacement(Move):
     The move of drawing cards from the train card deck.
     """
     def __init__(self, piece: Piece, new_position: [int, int], face_off_opponent: Optional[Piece]):
-        super().__init__()
-        self.piece = piece
-        self.new_position = new_position
+        super().__init__(piece, new_position)
         self.face_off_opponent = face_off_opponent
 
+    def play(self, game):
+        """
+        input : move : model.Displacement = Displacement chosen to be played
+        action : if no face off -> the piece is moved to new position
+            if face off -> face off, pieces displaced of put down according to the result, next_player updated
+        """
+        if self.face_off_opponent is None:
+            self.piece.position = self.second_position
+            if self.piece.has_ball:
+                game.ball_position = self.second_position
+        else:
+            result_face_off = game.face_off(self.piece, self.face_off_opponent)
+            print(result_face_off)
+            if result_face_off == "Defense wins!":
+                position = self.piece.position
+                if self.piece.has_ball:
+                    self.piece.has_ball = False
+                    if game.next_player()._color == Color.PINK:
+                        game.ball_position = [position[0], position[1] + 1]
+                    else:
+                        game.ball_position = [position[0], position[1] - 1]
+                self.piece.is_down = True
+                self.piece.turn_death = game.turn_count
+            else:
+                self.piece.position = self.second_position
+                if self.piece.has_ball:
+                    game.ball_position = self.second_position
+                self.face_off_opponent.is_down = True
+                self.face_off_opponent.turn_death = game.turn_count
+        game.board.update_board(game.players)
+        self.piece.has_moved = True
+        if game.turn_count % 2 == 1:
+            for piece in game.next_player().pieces:
+                piece.has_moved = False
+        game.turn_count += 1
+        game._next_player = (game.turn_count // 2) % 2
+
+    def draw(self, screen):
+        list_cols = [VERY_LIGHT_GREEN, LIGHT_GREEN]
+        list_reds = [LIGHT_RED, RED]
+        x = self.second_position[1]
+        y = self.second_position[0]
+        if self.face_off_opponent:
+            pg.draw.rect(screen, list_reds[(x + y) % 2], (x * GRIDWIDTH, y * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+        else:
+            pg.draw.rect(screen, list_cols[(x+y) % 2], (x * GRIDWIDTH, y * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+
+
     def __str__(self):
-        return "Displacement of the piece " + str(self.piece.name) + " to the position : " + str(self.new_position)
+        return "Displacement of the piece " + str(self.piece.name) + " to the position : " + str(self.second_position)
 
 class Pass(Move):
     """
@@ -245,17 +276,26 @@ class Pass(Move):
     """
 
     def __init__(self, piece: Piece, new_piece: Piece, face_off_opponent: Optional[Piece]):
-        super().__init__()
-        self.piece = piece
+        super().__init__(piece, new_piece.position)
         self.new_piece = new_piece
         self.face_off_opponent = face_off_opponent
 
+    def play(self, game):
+        """
+        input : move : model.Pass = Pass chosen to be played
+        action : if no face off -> the ball changes player
+            if face off -> to be implemented
+        """
+        game.ball_position = self.new_piece.position
+        self.piece.has_ball = False
+        self.new_piece.has_ball = True
+        game.board.update_board(game.players)
+
+    def draw(self, screen):
+        screen.blit(BALL, (self.second_position[1] * GRIDWIDTH, self.second_position[0] * GRIDWIDTH))
+
     def __str__(self):
         return "Pass from piece " + str(self.piece.name) + " to piece " + str(self.new_piece.name)
-
-
-    def __str__(self):
-        return "pass"
 
 
 class Tackle(Move):
@@ -263,34 +303,46 @@ class Tackle(Move):
     The move of Forcing a piece's way through, defined by the two pieces
     """
 
-    def __init__(self, piece : Piece, opponent : Piece):
-        super().__init__()
+    def __init__(self, piece: Piece, opponent: Piece):
+        super().__init__(piece, opponent.position)
         self.piece = piece
         self.opponent = opponent
 
+    def play(self, game):
+        """
+        input : move : model.Pass = Pass chosen to be played
+        action : if no face off -> the ball changes player
+            if face off -> to be implemented
+        """
+        result_face_off = game.face_off(self.piece, self.opponent)
+        print(result_face_off)
+        if result_face_off == "Defense wins!":
+            self.piece.is_down = True
+            self.piece.turn_death = game.turn_count
+        if result_face_off == "Plaquage parfait!":
+            self.opponent.has_ball = False
+            self.opponent.is_down = True
+            self.opponent.turn_death = game.turn_count
+            self.piece.has_ball = True
+            game.ball_position = self.piece.position
+        if result_face_off == "Attack wins!":
+            self.opponent.has_ball = False
+            self.opponent.is_down = True
+            self.opponent.turn_death = game.turn_count
+            position = self.opponent.position
+            if game.players[(game._next_player + 1) % 2]._color == Color.PINK:
+                game.ball_position = [position[0], position[1] + 1]
+            else:
+                game.ball_position = [position[0], position[1] - 1]
+        game.board.update_board(game.players)
+        if game.turn_count % 2 == 1:
+            for piece in game.next_player().pieces:
+                piece.has_moved = False
+        game.turn_count += 1
+        game._next_player = (game.turn_count // 2) % 2
+
+    def draw(self, screen):
+        pg.draw.rect(screen, RED, (self.second_position[1] * GRIDWIDTH, self.second_position[0] * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+
     def __str__(self):
         return "Tackle"
-
-
-class FootKick(Move):
-    """
-        The move of Forcing a piece's way through, defined by the two pieces
-        """
-
-    def __init__(self):
-        super().__init__()
-
-    def __str__(self):
-        return "FootKick"
-
-
-class Try(Move):
-    """
-    The move of Trying,
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def __str__(self):
-        return "Try"
