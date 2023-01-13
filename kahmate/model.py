@@ -174,13 +174,17 @@ class AIPlayer(Player):
 
 class Board:
     def __init__(self):
-        self.matrix = [[None for _ in range(COLS)] for _ in range(ROWS)]
+        self.matrix = [[None for _ in range(COLS+2*COLSAUX)] for _ in range(ROWS + 2*ROWSAUX)]
         self._selected_piece: None
 
     def draw_bgd(self, screen):
-        screen.fill(DARK_GREEN)
-        for row in range(ROWS):
-            for col in range(row % 2, COLS, 2):
+        screen.fill(BLACK)
+        pg.draw.rect(screen, DARK_GREEN, (COLSAUX*GRIDWIDTH, ROWSAUX*GRIDWIDTH, COLS*GRIDWIDTH, ROWS*GRIDWIDTH))
+        deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (118, 140))
+        screen.blit(deck, (COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
+        screen.blit(deck, ((COLSAUX + COLS)*GRIDWIDTH + COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1) * GRIDWIDTH))
+        for row in range(ROWSAUX, ROWS + ROWSAUX):
+            for col in range(row % 2 + COLSAUX, COLS + COLSAUX, 2):
                 pg.draw.rect(screen, GREEN, (col*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
     def draw(self, screen, players, ball_position, valid_moves):
@@ -192,7 +196,7 @@ class Board:
         screen.blit(BALL, (ball_position[1] * GRIDWIDTH, ball_position[0] * GRIDWIDTH))
 
     def update_board(self, players):
-        self.matrix = [[None for _ in range(COLS)] for _ in range(ROWS)]
+        self.matrix = [[None for _ in range(COLS + 2*COLSAUX)] for _ in range(ROWS + 2*ROWSAUX)]
         for player in players:
             for piece in player.pieces:
                 self.matrix[piece.position[0]][piece.position[1]] = piece
@@ -200,12 +204,13 @@ class Board:
     def check_click(self):
         pass
 
+
 class Move:
     """
     The parent class of all possible moves.
     """
 
-    def __init__(self, piece : Piece, second_position : [int, int]):
+    def __init__(self, piece: Piece, second_position : [int, int]):
         self.piece = piece
         self.second_position = second_position
         pass

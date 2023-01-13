@@ -12,13 +12,15 @@ RED = (220, 20, 60)
 LIGHT_RED = (255, 95, 107)
 
 # window settings
-GRIDWIDTH = 72
+GRIDWIDTH = 70
 PIECESIZE = 64
 CARDSIZE = (100, 140)
 ROWS = 8
+ROWSAUX = 1
 COLS = 11
-WIDTH = COLS*GRIDWIDTH
-HEIGHT = ROWS*GRIDWIDTH
+COLSAUX = 3
+WIDTH = (COLS + 2*COLSAUX)*GRIDWIDTH
+HEIGHT = (ROWS + 2*ROWSAUX)*GRIDWIDTH
 TITLE = "KAHMATE"
 FPS = 60
 
@@ -32,6 +34,6 @@ LIGHTNING = pg.transform.scale(pg.image.load(IMG_PATH / 'lightning.png'), (32, 3
 
 
 # initial positions, change later
-BLUE_POS = [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]]
-PINK_POS = [[0, 10], [1, 10], [2, 10], [3, 10], [4, 10], [5, 10]]
+BLUE_POS = [[1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3]]
+PINK_POS = [[1, 13], [2, 13], [3, 13], [4, 13], [5, 13], [6, 13]]
 
