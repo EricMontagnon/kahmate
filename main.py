@@ -78,11 +78,17 @@ class Game:
 
     def draw_bgd(self):
         self.screen.fill(BLACK)
+        pg.draw.rect(self.screen, LIGHT_GREEN, ((COLSAUX-1)*GRIDWIDTH, ROWSAUX*GRIDWIDTH, (COLS+2)*GRIDWIDTH, ROWS*GRIDWIDTH))
         pg.draw.rect(self.screen, DARK_GREEN, (COLSAUX*GRIDWIDTH, ROWSAUX*GRIDWIDTH, COLS*GRIDWIDTH, ROWS*GRIDWIDTH))
+
         deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (118, 140))
-        self.screen.blit(deck, (COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
-        self.screen.blit(deck, ((COLSAUX + COLS)*GRIDWIDTH + COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1) * GRIDWIDTH))
+        self.screen.blit(deck, ((COLSAUX - 1)*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
+        self.screen.blit(deck, ((COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
+
         for row in range(ROWSAUX, ROWS + ROWSAUX):
+            if row % 2 == 1:
+                pg.draw.rect(self.screen, VERY_LIGHT_GREEN, ((COLSAUX-1)*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+                pg.draw.rect(self.screen, VERY_LIGHT_GREEN, ((COLSAUX+COLS)*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
             for col in range(row % 2 + COLSAUX, COLS + COLSAUX, 2):
                 pg.draw.rect(self.screen, GREEN, (col*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
@@ -108,12 +114,12 @@ class Game:
         """
         for player in self.players:
             for piece in player.pieces:
-                if piece.position == self.ball_position and piece.has_ball == False:
+                if piece.position == self.ball_position and not piece.has_ball:
                     piece.has_ball = True
                 if -1 < piece.turn_death + 3 < self.turn_count:
                     piece.is_down = False
                     piece.turn_death = -1
-        self.board.draw(self.screen, self.players, self.ball_position, self.valid_moves)
+        self.draw()
         pg.display.update()
         self.is_end()
 
@@ -182,7 +188,7 @@ class Game:
                     mini = min(COLS+4, piece.position[1]+1)
                     maxi = min(COLS+4, piece.position[1]+3)
                 for j in range(mini, maxi):
-                    if self.board.matrix[i][j] is not None :
+                    if self.board.matrix[i][j] is not None:
                         possible_friend = self.board.matrix[i][j]
                         if possible_friend in self.players[self._next_player].pieces:
                             face_off_opponent = self.opponent_search([i, j], piece.position)
@@ -248,7 +254,6 @@ class Game:
                         self.generate_displacement(x, y)
                         self.generate_pass(x, y)
             self.update()
-
 
 
 if __name__ == "__main__":
