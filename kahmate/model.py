@@ -88,13 +88,13 @@ class Player:
         self.strength_deck = [i for i in range(1, 6)]
         self.pieces_img = {}
         for piece in self.pieces:
-            path = piece.name + '_' + self._color.value + '.png'
+            path = f'{piece.name}_{self._color.value}.png'
             self.pieces_img[piece.name] = pg.transform.scale(pg.image.load(IMG_PATH / path), (PIECESIZE, PIECESIZE))
-        path = 'rip_' + self._color.value + '.png'
+        path = f'rip_{self._color.value}.png'
         self.pieces_img['rip'] = pg.transform.scale(pg.image.load(IMG_PATH / path), (PIECESIZE, PIECESIZE))
         self.strength_deck_img = {}
         for i in range(1, 6):
-            path = 'card_' + self._color.value + '_' + str(i) + '.png'
+            path = f'card_{self._color.value}_{str(i)}.png'
             self.strength_deck_img[i] = pg.transform.scale(pg.image.load(IMG_PATH / path), CARDSIZE)
 
     @property
