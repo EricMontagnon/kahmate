@@ -130,8 +130,8 @@ class Game:
         """
         piece = self.board.matrix[x][y]
         if piece in self.next_player().pieces and not piece.is_down and not piece.has_moved:
-            for i in range(ROWS):
-                for j in range(COLS):
+            for i in range(1, ROWS+1):
+                for j in range(2, COLS+4):
                     distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
                     empty_case = self.board.matrix[i][j] is None
                     if distance_ok and empty_case:
@@ -149,13 +149,13 @@ class Game:
         """
         piece = self.board.matrix[x][y]
         if piece in self.next_player().pieces and not piece.is_down and piece.has_ball:
-            for i in range(max(0, piece.position[0]-2), min(ROWS, piece.position[0]+3)):
+            for i in range(max(1, piece.position[0]-2), min(ROWS+1, piece.position[0]+3)):
                 if self._next_player == 0:
-                    mini = max(0, piece.position[1] - 2)
+                    mini = max(1, piece.position[1] - 2)
                     maxi = piece.position[1]
                 else:
-                    mini = min(ROWS-1, piece.position[1]+1)
-                    maxi = min(ROWS, piece.position[1]+3)
+                    mini = min(COLS+4, piece.position[1]+1)
+                    maxi = min(COLS+4, piece.position[1]+3)
                 for j in range(mini, maxi):
                     if self.board.matrix[i][j] is not None :
                         possible_friend = self.board.matrix[i][j]
