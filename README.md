@@ -17,7 +17,6 @@ Objective:
     - stablish winner (erik)
     - tests (erik)
     - cards (cat)
-    - add white columns (cat)
     - stablish game over (cat)
     - change choose player (cat)
 
