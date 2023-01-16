@@ -49,7 +49,7 @@ class Game:
 
         # screen settings
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-        icon = pg.image.load('img/ball.png')
+        icon = pg.image.load(IMG_PATH/'ball.png')
         pg.display.set_icon(icon)
         pg.display.set_caption(TITLE)
 
