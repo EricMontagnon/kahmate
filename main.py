@@ -76,6 +76,24 @@ class Game:
         self.valid_moves = []
         self.turn_count = 0
 
+    def draw_bgd(self):
+        self.screen.fill(BLACK)
+        pg.draw.rect(self.screen, DARK_GREEN, (COLSAUX*GRIDWIDTH, ROWSAUX*GRIDWIDTH, COLS*GRIDWIDTH, ROWS*GRIDWIDTH))
+        deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (118, 140))
+        self.screen.blit(deck, (COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
+        self.screen.blit(deck, ((COLSAUX + COLS)*GRIDWIDTH + COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1) * GRIDWIDTH))
+        for row in range(ROWSAUX, ROWS + ROWSAUX):
+            for col in range(row % 2 + COLSAUX, COLS + COLSAUX, 2):
+                pg.draw.rect(self.screen, GREEN, (col*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+
+    def draw(self):
+        self.draw_bgd()
+        for move in self.valid_moves:
+            move.draw(self.screen)
+        for player in self.players:
+            player.draw(self.screen)
+        self.screen.blit(BALL, (self.ball_position[1] * GRIDWIDTH, self.ball_position[0] * GRIDWIDTH))
+
     def next_player(self):
         """
         output : player
@@ -163,7 +181,6 @@ class Game:
                             face_off_opponent = self.opponent_search([i, j], piece.position)
                             self.valid_moves.append(model.Pass(piece, possible_friend, face_off_opponent))
 
-
     def face_off(self, attack_piece: model.Piece, defense_piece: model.Piece):
         """
         input : attack_piece = piece that want to move or pass the ball
@@ -220,8 +237,5 @@ class Game:
 
 
 if __name__ == "__main__":
-    first_player = input('Name of the first player:')
-    second_player = input('Name of the second player:')
-
-    game = Game([(first_player, model.Color.BLUE), (second_player, model.Color.PINK)])
+    game = Game([('BLUE', model.Color.BLUE), ('PINK', model.Color.PINK)])
     game.run()

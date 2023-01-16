@@ -201,10 +201,6 @@ class Board:
             for piece in player.pieces:
                 self.matrix[piece.position[0]][piece.position[1]] = piece
 
-    def check_click(self):
-        pass
-
-
 class Move:
     """
     The parent class of all possible moves.

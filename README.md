@@ -13,12 +13,11 @@ At the beginning of a session
 MVP2
 Objective:
 
-    - fix red squares
-    - fix turns and ball moves
-    - clean draw squares function
-    - data class for settings
-    - clean the code
-    
-    - github action tests
-
+    - messages (cat)
+    - stablish winner (erik)
+    - tests (erik)
+    - cards (cat)
+    - add white columns (cat)
+    - stablish game over (cat)
+    - change choose player (cat)
 

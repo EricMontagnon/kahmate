@@ -18,7 +18,7 @@ CARDSIZE = (100, 140)
 ROWS = 8
 ROWSAUX = 1
 COLS = 11
-COLSAUX = 3
+COLSAUX = 4
 WIDTH = (COLS + 2*COLSAUX)*GRIDWIDTH
 HEIGHT = (ROWS + 2*ROWSAUX)*GRIDWIDTH
 TITLE = "KAHMATE"
@@ -34,6 +34,6 @@ LIGHTNING = pg.transform.scale(pg.image.load(IMG_PATH / 'lightning.png'), (32, 3
 
 
 # initial positions, change later
-BLUE_POS = [[1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3]]
-PINK_POS = [[1, 13], [2, 13], [3, 13], [4, 13], [5, 13], [6, 13]]
+BLUE_POS = [[2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4]]
+PINK_POS = [[2, 14], [3, 14], [4, 14], [5, 14], [6, 14], [7, 14]]
 
