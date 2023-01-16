@@ -97,6 +97,7 @@ class Game:
                     piece.turn_death = -1
         self.board.draw(self.screen, self.players, self.ball_position, self.valid_moves)
         pg.display.update()
+        self.is_end()
 
     def __str__(self):
         ans = "Description of the first team :"
@@ -130,8 +131,14 @@ class Game:
         """
         piece = self.board.matrix[x][y]
         if piece in self.next_player().pieces and not piece.is_down and not piece.has_moved:
-            for i in range(1, ROWS+1):
-                for j in range(2, COLS+4):
+            for i in range(1, ROWS+ROWSAUX):
+                if self._next_player == 0:
+                    mini = COLSAUX
+                    maxi = COLS + COLSAUX + 1
+                else:
+                    mini = COLSAUX - 1
+                    maxi = COLS + COLSAUX
+                for j in range(mini, maxi):
                     distance_ok = 0 < abs(i-piece.position[0]) + abs(j-piece.position[1]) <= piece.speed
                     empty_case = self.board.matrix[i][j] is None
                     if distance_ok and empty_case:
@@ -190,6 +197,14 @@ class Game:
             else:
                 return "Defense wins!"
 
+    def is_end(self):
+        if self.ball_position[1] < COLSAUX:
+            print("PINK HAS WON!!!!")
+            self.running = False
+        if self.ball_position[1] >= COLS + COLSAUX:
+            print("BLUE HAS WON!!!!")
+            self.running = False
+
     def run(self):
         """
         one characteristic loop :
@@ -215,8 +230,8 @@ class Game:
                     else:
                         self.generate_displacement(x, y)
                         self.generate_pass(x, y)
-
             self.update()
+
 
 
 if __name__ == "__main__":
