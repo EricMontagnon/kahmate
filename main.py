@@ -275,10 +275,13 @@ class Game:
                     mouse_pos = pg.mouse.get_pos()
                     x, y = get_row_col_from_mouse(mouse_pos)
                     if self.valid_moves:
-                        for move in self.valid_moves:
-                            if [x, y] == move.second_position:
-                                move.play(self)
-                                self.valid_moves = []
+                        if [x, y] == self.valid_moves[0].piece.position:
+                            self.valid_moves = []
+                        else:
+                            for move in self.valid_moves:
+                                if [x, y] == move.second_position:
+                                    move.play(self)
+                                    self.valid_moves = []
                     else:
                         self.generate_displacement(x, y)
                         self.generate_pass(x, y)
