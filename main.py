@@ -1,3 +1,4 @@
+import random
 from kahmate.settings import *
 from kahmate import model
 import pygame as pg
@@ -65,8 +66,10 @@ class Game:
         self._next_player = 0
 
         # define ball
-        self.players[0].pieces[0].has_ball = True
-        self.ball_position = self.players[0].pieces[0].position
+        random_player = random.choice(self.players)
+        random_piece = random.choice(random_player.pieces)
+        random_piece.has_ball = True
+        self.ball_position = random_piece.position
 
         # define board
         self.board = model.Board()
@@ -76,19 +79,38 @@ class Game:
         self.valid_moves = []
         self.turn_count = 0
 
+        self.main_msg = Messages.STD.value
+
     def draw_bgd(self):
         self.screen.fill(BLACK)
-        pg.draw.rect(self.screen, LIGHT_GREEN, ((COLSAUX-1)*GRIDWIDTH, ROWSAUX*GRIDWIDTH, (COLS+2)*GRIDWIDTH, ROWS*GRIDWIDTH))
+        pg.draw.rect(self.screen, BLUE, ((COLSAUX-1)*GRIDWIDTH, ROWSAUX*GRIDWIDTH, GRIDWIDTH, ROWS*GRIDWIDTH))
+        pg.draw.rect(self.screen, PINK, ((COLSAUX+COLS)*GRIDWIDTH, ROWSAUX*GRIDWIDTH, GRIDWIDTH, ROWS*GRIDWIDTH))
         pg.draw.rect(self.screen, DARK_GREEN, (COLSAUX*GRIDWIDTH, ROWSAUX*GRIDWIDTH, COLS*GRIDWIDTH, ROWS*GRIDWIDTH))
 
-        deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (118, 140))
-        self.screen.blit(deck, ((COLSAUX - 1)*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
-        self.screen.blit(deck, ((COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
+        deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (DECKSIZE, DECKSIZE))
+        self.screen.blit(deck, ((COLSAUX - 1)*GRIDWIDTH/2 - DECKSIZE/2, (ROWSAUX + 1)*GRIDWIDTH))
+        self.screen.blit(deck, ((COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2 - DECKSIZE/2,
+                                (ROWSAUX + 1)*GRIDWIDTH))
+
+        for player in self.players:
+            color = BLUE if player.color == model.Color.BLUE else PINK
+            is_bold = True if player == self.next_player() else False
+            team_name_img = create_text(f'{player.color.value.upper()} TEAM', Fonts.TITLE.value, TextSize.TITLE.value,
+                                        color, is_bold)
+            team_name_rect = team_name_img.get_rect()
+            if player.color == model.Color.BLUE:
+                team_name_rect.center = (COLSAUX-1)*GRIDWIDTH/2, (ROWSAUX+0.5)*GRIDWIDTH
+            else:
+                team_name_rect.center = (COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2, \
+                                        (ROWSAUX+0.5)*GRIDWIDTH
+            self.screen.blit(team_name_img, team_name_rect)
+
+        main_msg_img = create_text(self.main_msg, Fonts.SUBTITLE.value, TextSize.TITLE.value, WHITE, False)
+        main_msg_rect = main_msg_img.get_rect()
+        main_msg_rect.center = WIDTH/2, ROWSAUX*GRIDWIDTH/2
+        self.screen.blit(main_msg_img, main_msg_rect)
 
         for row in range(ROWSAUX, ROWS + ROWSAUX):
-            if row % 2 == 1:
-                pg.draw.rect(self.screen, VERY_LIGHT_GREEN, ((COLSAUX-1)*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
-                pg.draw.rect(self.screen, VERY_LIGHT_GREEN, ((COLSAUX+COLS)*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
             for col in range(row % 2 + COLSAUX, COLS + COLSAUX, 2):
                 pg.draw.rect(self.screen, GREEN, (col*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
@@ -140,8 +162,10 @@ class Game:
         face_off_opponent = None
         distance = abs(search_position[0] - piece_position[0]) + abs(search_position[1] - piece_position[1])
         for k in range(distance - 1):
-            case_x = int(((k + 1) / distance) * search_position[0] + ((distance - (k + 1)) / distance) * piece_position[0])
-            case_y = int(((k + 1) / distance) * search_position[1] + ((distance - (k + 1)) / distance) * piece_position[1])
+            case_x = int(((k + 1) / distance) * search_position[0] +
+                         ((distance - (k + 1)) / distance) * piece_position[0])
+            case_y = int(((k + 1) / distance) * search_position[1] +
+                         ((distance - (k + 1)) / distance) * piece_position[1])
             if self.board.matrix[case_x][case_y] is not None:
                 possible_foo = self.board.matrix[case_x][case_y]
                 if possible_foo in self.players[(self._next_player + 1) % 2].pieces and not possible_foo.is_down:
@@ -170,7 +194,8 @@ class Game:
                         self.valid_moves.append(model.Displacement(piece, [i, j], face_off_opponent))
                     if distance_ok and not empty_case:
                         possible_opponent = self.board.matrix[i][j]
-                        if possible_opponent in self.players[(self._next_player + 1) % 2].pieces and possible_opponent.has_ball:
+                        if possible_opponent in self.players[(self._next_player + 1) % 2].pieces and \
+                                possible_opponent.has_ball:
                             self.valid_moves.append(model.Tackle(piece, possible_opponent))
 
     def generate_pass(self, x: int, y: int):
@@ -202,8 +227,12 @@ class Game:
         """
         attack_player = self.players[self._next_player]
         defense_player = self.players[(self._next_player + 1) % 2]
-        attack_score = attack_player.pick_strength() + attack_piece.attack
-        defense_score = defense_player.pick_strength() + defense_piece.defense
+
+        attack_strength = attack_player.pick_strength()
+        defense_strength = defense_player.pick_strength()
+
+        attack_score = attack_strength + attack_piece.attack
+        defense_score = defense_strength + defense_piece.defense
         if attack_score >= defense_score + 2:
             return "Plaquage parfait!"
         if defense_score + 2 > attack_score > defense_score:

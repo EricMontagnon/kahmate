@@ -86,6 +86,7 @@ class Player:
         self.pieces.append(Piece(PieceType.REGULAR))
         self._color = color
         self.strength_deck = [i for i in range(1, 6)]
+        self.last_strength_picked = None
         self.pieces_img = {}
         for piece in self.pieces:
             path = f'{piece.name}_{self._color.value}.png'
@@ -99,21 +100,32 @@ class Player:
 
     @property
     def color(self):
-        return self.color
+        return self._color
 
     def draw(self, screen):
         for piece in self.pieces:
             screen.blit(self.pieces_img[piece.name], piece.screen_position())
             if piece.is_down:
                 screen.blit(self.pieces_img['rip'], (piece.screen_position()))
+        if self.last_strength_picked:
+            if self._color == Color.BLUE:
+                coord = ((COLSAUX - 1) * GRIDWIDTH / 2 - CARDSIZE[0] / 2, (ROWSAUX + 3) * GRIDWIDTH)
+            else:
+                coord = ((COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2 - CARDSIZE[0]/2,
+                         (ROWSAUX+3)*GRIDWIDTH)
+            screen.blit(self.strength_deck_img[self.last_strength_picked], coord)
 
     def pick_strength(self):
         random.shuffle(self.strength_deck)
-        picked = self.strength_deck.pop()
+        self.last_strength_picked = self.strength_deck.pop()
+
         if len(self.strength_deck) == 0:
             self.strength_deck = [i for i in range(1, 6)]
-        return picked
 
+        return self.last_strength_picked
+
+    def reset_picked_strength(self):
+        self.last_strength_picked = None
 
 class HumanPlayer(Player):
     """
@@ -177,29 +189,12 @@ class Board:
         self.matrix = [[None for _ in range(COLS+2*COLSAUX)] for _ in range(ROWS + 2*ROWSAUX)]
         self._selected_piece: None
 
-    def draw_bgd(self, screen):
-        screen.fill(BLACK)
-        pg.draw.rect(screen, DARK_GREEN, (COLSAUX*GRIDWIDTH, ROWSAUX*GRIDWIDTH, COLS*GRIDWIDTH, ROWS*GRIDWIDTH))
-        deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (118, 140))
-        screen.blit(deck, (COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1)*GRIDWIDTH))
-        screen.blit(deck, ((COLSAUX + COLS)*GRIDWIDTH + COLSAUX*GRIDWIDTH/2 - 118/2, (ROWSAUX+1) * GRIDWIDTH))
-        for row in range(ROWSAUX, ROWS + ROWSAUX):
-            for col in range(row % 2 + COLSAUX, COLS + COLSAUX, 2):
-                pg.draw.rect(screen, GREEN, (col*GRIDWIDTH, row*GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
-
-    def draw(self, screen, players, ball_position, valid_moves):
-        self.draw_bgd(screen)
-        for move in valid_moves:
-            move.draw(screen)
-        for player in players:
-            player.draw(screen)
-        screen.blit(BALL, (ball_position[1] * GRIDWIDTH, ball_position[0] * GRIDWIDTH))
-
     def update_board(self, players):
         self.matrix = [[None for _ in range(COLS + 2*COLSAUX)] for _ in range(ROWS + 2*ROWSAUX)]
         for player in players:
             for piece in player.pieces:
                 self.matrix[piece.position[0]][piece.position[1]] = piece
+
 
 class Move:
     """
@@ -343,7 +338,8 @@ class Tackle(Move):
         game._next_player = (game.turn_count // 2) % 2
 
     def draw(self, screen):
-        pg.draw.rect(screen, RED, (self.second_position[1] * GRIDWIDTH, self.second_position[0] * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
+        pg.draw.rect(screen, RED, (self.second_position[1] * GRIDWIDTH,
+                                   self.second_position[0] * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 
     def __str__(self):
         return "Tackle"
