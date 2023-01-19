@@ -25,7 +25,6 @@ class PieceType(enum.Enum):
     def __getitem__(self, index):
         return self.value[index]
 
-
 class Piece:
     """
     A piece is defined by :
@@ -102,18 +101,25 @@ class Player:
     def color(self):
         return self._color
 
+    def center_aux(self, y_row):
+        y = (ROWSAUX*y_row) * GRIDWIDTH
+        if self._color == Color.BLUE:
+            x = (COLSAUX-1)*GRIDWIDTH/2
+        else:
+            x = (COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2
+
+        return x, y
+
     def draw(self, screen):
         for piece in self.pieces:
             screen.blit(self.pieces_img[piece.name], piece.screen_position())
             if piece.is_down:
                 screen.blit(self.pieces_img['rip'], (piece.screen_position()))
         if self.last_strength_picked:
-            if self._color == Color.BLUE:
-                coord = ((COLSAUX - 1) * GRIDWIDTH / 2 - CARDSIZE[0] / 2, (ROWSAUX + 3) * GRIDWIDTH)
-            else:
-                coord = ((COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2 - CARDSIZE[0]/2,
-                         (ROWSAUX+3)*GRIDWIDTH)
-            screen.blit(self.strength_deck_img[self.last_strength_picked], coord)
+            strength_deck_img = self.strength_deck_img[self.last_strength_picked]
+            strength_deck_rect = self.strength_deck_img[self.last_strength_picked].get_rect()
+            strength_deck_rect.center = self.center_aux(5)
+            screen.blit(strength_deck_img, strength_deck_rect)
 
     def pick_strength(self):
         random.shuffle(self.strength_deck)
@@ -126,6 +132,7 @@ class Player:
 
     def reset_picked_strength(self):
         self.last_strength_picked = None
+
 
 class HumanPlayer(Player):
     """
@@ -201,7 +208,7 @@ class Move:
     The parent class of all possible moves.
     """
 
-    def __init__(self, piece: Piece, second_position : [int, int]):
+    def __init__(self, piece: Piece, second_position: [int, int]):
         self.piece = piece
         self.second_position = second_position
         pass
@@ -252,7 +259,46 @@ class Displacement(Move):
         game.turn_count += 1
         game._next_player = (game.turn_count // 2) % 2
 
-    def draw(self, screen):
+    def draw(self, screen, player):
+
+        info_card_rect = pg.Rect(0, 0, 0, 0)
+        info_card_rect.size = (2*GRIDWIDTH, 2*GRIDWIDTH)
+        info_card_rect.center = player.center_aux(8)
+        pg.draw.rect(screen, WHITE, info_card_rect, border_radius=2)
+
+        line_rect = pg.Rect(0, 0, 0, 0)
+        line_rect.size = (2*GRIDWIDTH, 3)
+        line_rect.center = player.center_aux(7.5)
+        pg.draw.rect(screen, BLACK, line_rect)
+
+        props = ['speed', 'attack', 'defense']
+        for i in range(3):
+            line_rect = pg.Rect(0, 0, 0, 0)
+            line_rect.size = (1.8 * GRIDWIDTH, 1)
+            line_rect.center = player.center_aux(7.9 + 0.4*i)
+            pg.draw.rect(screen, BLACK, line_rect)
+
+            prop_img = create_text(f'{props[i]}',
+                                   Fonts.SUBTITLE.value, TextSize.REGULAR.value, BLACK, False)
+            prop_rect = prop_img.get_rect()
+            center = player.center_aux(7.80 + 0.4*i)
+            prop_rect.left = center[0] - 60
+            prop_rect.centery = center[1]
+            screen.blit(prop_img, prop_rect)
+
+            prop_value_img = create_text(f'{self.piece.piece_type[i]}',
+                                   Fonts.SUBTITLE.value, TextSize.REGULAR.value, BLACK, False)
+            prop_value_rect = prop_value_img.get_rect()
+            center = player.center_aux(7.8 + 0.4 * i)
+            prop_value_rect.right = center[0] + 60
+            prop_value_rect.centery = center[1]
+            screen.blit(prop_value_img, prop_value_rect)
+
+        info_img = create_text(f'{self.piece.name.upper()}', Fonts.SUBTITLE.value, TextSize.SUBTITLE.value, BLACK, False)
+        info_rect = info_img.get_rect()
+        info_rect.center = player.center_aux(7.3)
+        screen.blit(info_img, info_rect)
+
         list_cols = [VERY_LIGHT_GREEN, LIGHT_GREEN]
         list_reds = [LIGHT_RED, RED]
         x = self.second_position[1]
@@ -287,7 +333,7 @@ class Pass(Move):
         self.new_piece.has_ball = True
         game.board.update_board(game.players)
 
-    def draw(self, screen):
+    def draw(self, screen, player):
         screen.blit(BALL, (self.second_position[1] * GRIDWIDTH, self.second_position[0] * GRIDWIDTH))
 
     def __str__(self):

@@ -54,6 +54,9 @@ class Messages(enum.Enum):
 
 class TextSize(enum.Enum):
     TITLE = 30
+    SUBTITLE = 25
+    REGULAR = 14
+
 
 def create_text(text, font, size, color, is_bold):
     font = pg.font.SysFont(font, size, bold=is_bold)

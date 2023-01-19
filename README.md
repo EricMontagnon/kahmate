@@ -12,11 +12,13 @@ At the beginning of a session
 
 MVP2
 Objective:
+    
+    show piece info
+    
+    implement game over
 
-    - messages (cat)
-    - stablish winner (erik)
-    - tests (erik)
-    - cards (cat)
-    - stablish game over (cat)
-    - change choose player (cat)
+    fix displacement
+
+    
+    
 

@@ -87,22 +87,18 @@ class Game:
         pg.draw.rect(self.screen, PINK, ((COLSAUX+COLS)*GRIDWIDTH, ROWSAUX*GRIDWIDTH, GRIDWIDTH, ROWS*GRIDWIDTH))
         pg.draw.rect(self.screen, DARK_GREEN, (COLSAUX*GRIDWIDTH, ROWSAUX*GRIDWIDTH, COLS*GRIDWIDTH, ROWS*GRIDWIDTH))
 
-        deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (DECKSIZE, DECKSIZE))
-        self.screen.blit(deck, ((COLSAUX - 1)*GRIDWIDTH/2 - DECKSIZE/2, (ROWSAUX + 1)*GRIDWIDTH))
-        self.screen.blit(deck, ((COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2 - DECKSIZE/2,
-                                (ROWSAUX + 1)*GRIDWIDTH))
-
         for player in self.players:
+            deck = pg.transform.scale(pg.image.load(IMG_PATH / 'deck.png'), (DECKSIZE, DECKSIZE))
+            deck_rect = deck.get_rect()
+            deck_rect.center = player.center_aux(3)
+            self.screen.blit(deck, deck_rect)
+
             color = BLUE if player.color == model.Color.BLUE else PINK
             is_bold = True if player == self.next_player() else False
             team_name_img = create_text(f'{player.color.value.upper()} TEAM', Fonts.TITLE.value, TextSize.TITLE.value,
                                         color, is_bold)
             team_name_rect = team_name_img.get_rect()
-            if player.color == model.Color.BLUE:
-                team_name_rect.center = (COLSAUX-1)*GRIDWIDTH/2, (ROWSAUX+0.5)*GRIDWIDTH
-            else:
-                team_name_rect.center = (COLSAUX + 1 + COLS)*GRIDWIDTH + (COLSAUX-1)*GRIDWIDTH/2, \
-                                        (ROWSAUX+0.5)*GRIDWIDTH
+            team_name_rect.center = player.center_aux(1.5)
             self.screen.blit(team_name_img, team_name_rect)
 
         main_msg_img = create_text(self.main_msg, Fonts.SUBTITLE.value, TextSize.TITLE.value, WHITE, False)
@@ -117,7 +113,7 @@ class Game:
     def draw(self):
         self.draw_bgd()
         for move in self.valid_moves:
-            move.draw(self.screen)
+            move.draw(self.screen, self.next_player())
         for player in self.players:
             player.draw(self.screen)
         self.screen.blit(BALL, (self.ball_position[1] * GRIDWIDTH, self.ball_position[0] * GRIDWIDTH))
