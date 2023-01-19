@@ -211,8 +211,46 @@ class Move:
     def __init__(self, piece: Piece, second_position: [int, int]):
         self.piece = piece
         self.second_position = second_position
-        pass
 
+    def draw_card(self, screen, player):
+
+        info_card_rect = pg.Rect(0, 0, 0, 0)
+        info_card_rect.size = (2*GRIDWIDTH, 2*GRIDWIDTH)
+        info_card_rect.center = player.center_aux(8)
+        pg.draw.rect(screen, WHITE, info_card_rect, border_radius=2)
+
+        line_rect = pg.Rect(0, 0, 0, 0)
+        line_rect.size = (2*GRIDWIDTH, 3)
+        line_rect.center = player.center_aux(7.5)
+        pg.draw.rect(screen, BLACK, line_rect)
+
+        props = ['speed', 'attack', 'defense']
+        for i in range(3):
+            line_rect = pg.Rect(0, 0, 0, 0)
+            line_rect.size = (1.8 * GRIDWIDTH, 1)
+            line_rect.center = player.center_aux(7.9 + 0.4*i)
+            pg.draw.rect(screen, BLACK, line_rect)
+
+            prop_img = create_text(f'{props[i]}',
+                                   Fonts.SUBTITLE.value, TextSize.REGULAR.value, BLACK, False)
+            prop_rect = prop_img.get_rect()
+            center = player.center_aux(7.80 + 0.4*i)
+            prop_rect.left = center[0] - 60
+            prop_rect.centery = center[1]
+            screen.blit(prop_img, prop_rect)
+
+            prop_value_img = create_text(f'{self.piece.piece_type[i]}',
+                                   Fonts.SUBTITLE.value, TextSize.REGULAR.value, BLACK, False)
+            prop_value_rect = prop_value_img.get_rect()
+            center = player.center_aux(7.8 + 0.4 * i)
+            prop_value_rect.right = center[0] + 60
+            prop_value_rect.centery = center[1]
+            screen.blit(prop_value_img, prop_value_rect)
+
+        info_img = create_text(f'{self.piece.name.upper()}', Fonts.SUBTITLE.value, TextSize.SUBTITLE.value, BLACK, False)
+        info_rect = info_img.get_rect()
+        info_rect.center = player.center_aux(7.3)
+        screen.blit(info_img, info_rect)
 
 class Displacement(Move):
     """
@@ -260,45 +298,7 @@ class Displacement(Move):
         game._next_player = (game.turn_count // 2) % 2
 
     def draw(self, screen, player):
-
-        info_card_rect = pg.Rect(0, 0, 0, 0)
-        info_card_rect.size = (2*GRIDWIDTH, 2*GRIDWIDTH)
-        info_card_rect.center = player.center_aux(8)
-        pg.draw.rect(screen, WHITE, info_card_rect, border_radius=2)
-
-        line_rect = pg.Rect(0, 0, 0, 0)
-        line_rect.size = (2*GRIDWIDTH, 3)
-        line_rect.center = player.center_aux(7.5)
-        pg.draw.rect(screen, BLACK, line_rect)
-
-        props = ['speed', 'attack', 'defense']
-        for i in range(3):
-            line_rect = pg.Rect(0, 0, 0, 0)
-            line_rect.size = (1.8 * GRIDWIDTH, 1)
-            line_rect.center = player.center_aux(7.9 + 0.4*i)
-            pg.draw.rect(screen, BLACK, line_rect)
-
-            prop_img = create_text(f'{props[i]}',
-                                   Fonts.SUBTITLE.value, TextSize.REGULAR.value, BLACK, False)
-            prop_rect = prop_img.get_rect()
-            center = player.center_aux(7.80 + 0.4*i)
-            prop_rect.left = center[0] - 60
-            prop_rect.centery = center[1]
-            screen.blit(prop_img, prop_rect)
-
-            prop_value_img = create_text(f'{self.piece.piece_type[i]}',
-                                   Fonts.SUBTITLE.value, TextSize.REGULAR.value, BLACK, False)
-            prop_value_rect = prop_value_img.get_rect()
-            center = player.center_aux(7.8 + 0.4 * i)
-            prop_value_rect.right = center[0] + 60
-            prop_value_rect.centery = center[1]
-            screen.blit(prop_value_img, prop_value_rect)
-
-        info_img = create_text(f'{self.piece.name.upper()}', Fonts.SUBTITLE.value, TextSize.SUBTITLE.value, BLACK, False)
-        info_rect = info_img.get_rect()
-        info_rect.center = player.center_aux(7.3)
-        screen.blit(info_img, info_rect)
-
+        self.draw_card(screen, player)
         list_cols = [VERY_LIGHT_GREEN, LIGHT_GREEN]
         list_reds = [LIGHT_RED, RED]
         x = self.second_position[1]
@@ -307,7 +307,6 @@ class Displacement(Move):
             pg.draw.rect(screen, list_reds[(x + y) % 2], (x * GRIDWIDTH, y * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
         else:
             pg.draw.rect(screen, list_cols[(x+y) % 2], (x * GRIDWIDTH, y * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
-
 
     def __str__(self):
         return "Displacement of the piece " + str(self.piece.name) + " to the position : " + str(self.second_position)
@@ -334,6 +333,8 @@ class Pass(Move):
         game.board.update_board(game.players)
 
     def draw(self, screen, player):
+
+        self.draw_card(screen, player)
         screen.blit(BALL, (self.second_position[1] * GRIDWIDTH, self.second_position[0] * GRIDWIDTH))
 
     def __str__(self):
@@ -383,7 +384,9 @@ class Tackle(Move):
         game.turn_count += 1
         game._next_player = (game.turn_count // 2) % 2
 
-    def draw(self, screen):
+    def draw(self, screen, player):
+
+        self.draw_card(screen, player)
         pg.draw.rect(screen, RED, (self.second_position[1] * GRIDWIDTH,
                                    self.second_position[0] * GRIDWIDTH, GRIDWIDTH, GRIDWIDTH))
 

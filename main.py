@@ -78,8 +78,9 @@ class Game:
         # define move parameters
         self.valid_moves = []
         self.turn_count = 0
+        self.play_again_button = None
 
-        self.main_msg = Messages.STD.value
+        self.main_msg = 'IT\'S ON!'
 
     def draw_bgd(self):
         self.screen.fill(BLACK)
@@ -138,8 +139,8 @@ class Game:
                     piece.is_down = False
                     piece.turn_death = -1
         self.draw()
+        self.game_over()
         pg.display.update()
-        self.is_end()
 
     def __str__(self):
         ans = "Description of the first team :"
@@ -245,13 +246,35 @@ class Game:
             else:
                 return "Defense wins!"
 
-    def is_end(self):
+    def draw_game_over(self):
+
+        blur_surface = pg.Surface(((COLS+1)*GRIDWIDTH, ROWS*GRIDWIDTH))
+        blur_surface.set_alpha(128)
+        blur_surface.fill(WHITE)
+        self.screen.blit(blur_surface, ((COLSAUX-1)*GRIDWIDTH, ROWSAUX*GRIDWIDTH))
+
+        self.play_again_button = pg.Rect(0, 0, 0, 0)
+        self.play_again_button.size = (3.2*GRIDWIDTH, 0.7*GRIDWIDTH)
+        self.play_again_button.center = WIDTH/2, HEIGHT/2
+        pg.draw.rect(self.screen, WHITE, self.play_again_button, border_radius=2)
+
+        arrow_img = pg.transform.scale(pg.image.load(IMG_PATH / 'arrow.png'), ARROWSIZE)
+        arrow_rect = arrow_img.get_rect()
+        arrow_rect.center = WIDTH/2 - 90, HEIGHT/2
+        self.screen.blit(arrow_img, arrow_rect)
+
+        play_msg_img = create_text('PLAY AGAIN', Fonts.SUBTITLE.value, TextSize.SUBTITLE.value, BLACK, True)
+        play_msg_rect = play_msg_img.get_rect()
+        play_msg_rect.center = WIDTH/2 + 10, HEIGHT/2
+        self.screen.blit(play_msg_img, play_msg_rect)
+
+    def game_over(self):
         if self.ball_position[1] < COLSAUX:
-            print("PINK HAS WON!!!!")
-            self.running = False
-        if self.ball_position[1] >= COLS + COLSAUX:
-            print("BLUE HAS WON!!!!")
-            self.running = False
+            self.main_msg = 'PINK TEAM WINS!!!'
+            self.draw_game_over()
+        elif self.ball_position[1] >= COLS + COLSAUX:
+            self.main_msg = 'BLUE TEAM WINS!!!'
+            self.draw_game_over()
 
     def run(self):
         """
@@ -278,6 +301,9 @@ class Game:
                                 if [x, y] == move.second_position:
                                     move.play(self)
                                     self.valid_moves = []
+                    elif self.play_again_button:
+                        if self.play_again_button.collidepoint(mouse_pos):
+                            self.__init__([('BLUE', model.Color.BLUE), ('PINK', model.Color.PINK)])
                     else:
                         self.generate_displacement(x, y)
                         self.generate_pass(x, y)
